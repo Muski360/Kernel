@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="KERNEL — metodologia e plataforma para criação de aplicações web com requisitos rastreáveis, design aprovado, implementação por agentes e entrega verificável." />
+  <title>KERNEL — Engenharia de software assistida por agentes</title>
+  <style>
+    :root{
+      --bg:#0a0a0a;
+      --surface:#111111;
+      --surface-2:#171717;
+      --line:#292929;
+      --line-strong:#3a3a3a;
+      --text:#f2f2ef;
+      --muted:#9c9c96;
+      --accent:#b6ff3b;
+      --accent-2:#e7ffbe;
+      --danger:#ff6b57;
+      --max:1180px;
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(182,255,59,.08), transparent 28%),
+        linear-gradient(180deg,#090909 0%,#0c0c0c 100%);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      line-height:1.5;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+
+    .grid-bg{
+      position:fixed; inset:0; pointer-events:none; opacity:.13; z-index:-1;
+      background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size:48px 48px;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 75%);
+    }
+
+    .wrap{width:min(var(--max),calc(100% - 40px)); margin:0 auto}
+
+    nav{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter:blur(16px);
+      background:rgba(10,10,10,.72);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .nav-inner{
+      min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:24px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:-.03em;
+    }
+
+    .mark{
+      width:34px; height:34px; display:grid; place-items:center; position:relative;
+    }
+
+    .mark i{
+      width:12px; height:12px; border-radius:50%; background:var(--accent); position:absolute;
+      box-shadow:0 0 28px rgba(182,255,59,.4);
+    }
+
+    .mark i:nth-child(1){transform:translate(-8px,-8px)}
+    .mark i:nth-child(2){transform:translate(8px,-8px)}
+    .mark i:nth-child(3){transform:translate(-8px,8px)}
+    .mark i:nth-child(4){transform:translate(8px,8px)}
+    .mark:after{
+      content:""; width:11px; height:11px; background:var(--accent); transform:rotate(45deg);
+      position:absolute;
+    }
+
+    .nav-links{display:flex; gap:24px; color:var(--muted); font-size:14px}
+    .nav-links a:hover{color:var(--text)}
+    .nav-cta{
+      border:1px solid var(--line-strong); padding:10px 14px; border-radius:999px; color:var(--text);
+      background:rgba(255,255,255,.03);
+    }
+
+    header{padding:88px 0 72px}
+    .eyebrow{
+      display:inline-flex; align-items:center; gap:9px; color:var(--accent); font-size:13px;
+      border:1px solid rgba(182,255,59,.25); background:rgba(182,255,59,.05);
+      border-radius:999px; padding:8px 11px; margin-bottom:28px;
+    }
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+
+    h1{
+      font-size:clamp(50px,8vw,108px);
+      line-height:.92; letter-spacing:-.065em; max-width:980px; margin:0;
+      font-weight:850;
+    }
+
+    .hero-sub{
+      display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr); gap:48px;
+      margin-top:42px; align-items:end;
+    }
+    .lead{
+      font-size:clamp(19px,2.3vw,28px); line-height:1.28; letter-spacing:-.02em; color:#d8d8d2;
+      max-width:760px; margin:0;
+    }
+    .hero-side{
+      border-left:1px solid var(--line); padding-left:24px; color:var(--muted); font-size:14px;
+    }
+    .hero-actions{display:flex; gap:12px; margin-top:34px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:13px 18px; border-radius:12px; border:1px solid var(--line-strong);
+      background:var(--surface); color:var(--text); font-weight:700;
+    }
+    .btn.primary{background:var(--accent);color:#0b0b0b;border-color:var(--accent)}
+    .btn:hover{transform:translateY(-1px)}
+
+    .statement{
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      padding:28px 0;
+      margin-bottom:88px;
+    }
+    .statement .inner{
+      display:grid;grid-template-columns:180px 1fr;gap:30px;align-items:start;
+    }
+    .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+    .statement p{
+      margin:0; font-size:clamp(22px,3vw,38px); max-width:950px; line-height:1.16; letter-spacing:-.035em;
+    }
+
+    section{padding:82px 0}
+    .section-head{
+      display:grid; grid-template-columns:220px 1fr; gap:32px; margin-bottom:44px;
+    }
+    .section-head h2{
+      margin:0; font-size:clamp(34px,5vw,64px); line-height:.98; letter-spacing:-.05em;
+    }
+    .section-head p{margin:14px 0 0;color:var(--muted);max-width:720px;font-size:17px}
+
+    .flow{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    }
+    .step{
+      min-height:190px; border:1px solid var(--line); border-radius:var(--radius); padding:20px;
+      background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01));
+      position:relative; overflow:hidden;
+    }
+    .step:before{
+      content:attr(data-step); position:absolute; right:14px; top:8px; color:#303030;
+      font-size:72px;font-weight:900;letter-spacing:-.08em;
+    }
+    .step strong{display:block;font-size:18px;max-width:75%;position:relative;z-index:1}
+    .step p{color:var(--muted);font-size:14px;position:absolute;left:20px;right:20px;bottom:18px;margin:0}
+    .step.highlight{border-color:rgba(182,255,59,.35);background:rgba(182,255,59,.045)}
+
+    .architecture{
+      display:grid; grid-template-columns:1fr 1fr; gap:18px;
+    }
+    .arch-card{
+      border:1px solid var(--line); border-radius:22px; background:var(--surface); padding:28px;
+    }
+    .arch-card.big{grid-row:span 2}
+    .arch-card h3{font-size:24px;margin:0 0 10px;letter-spacing:-.035em}
+    .arch-card p{margin:0;color:var(--muted)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+    .chip{
+      border:1px solid var(--line-strong);border-radius:999px;padding:7px 10px;font-size:12px;color:#d0d0ca;
+    }
+
+    .diagram{
+      margin-top:28px;border:1px solid var(--line);border-radius:16px;padding:18px;background:#0c0c0c;
+      font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;color:#cfcfc8;
+    }
+    .diagram .row{display:flex;align-items:center;gap:8px;margin:10px 0}
+    .node{padding:8px 10px;border:1px solid #343434;border-radius:9px;background:#131313}
+    .arrow{color:var(--accent)}
+
+    .principles{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    }
+    .principle{
+      border-top:1px solid var(--line-strong);padding:22px 4px 8px;
+    }
+    .principle .n{font-size:12px;color:var(--accent);margin-bottom:18px}
+    .principle h3{margin:0 0 8px;font-size:22px;letter-spacing:-.03em}
+    .principle p{margin:0;color:var(--muted);font-size:14px}
+
+    .security{
+      display:grid;grid-template-columns:.95fr 1.05fr;gap:18px;
+    }
+    .security .panel{
+      border:1px solid var(--line);border-radius:22px;padding:28px;background:#0e0e0e;
+    }
+    .security .panel.accent{
+      background:var(--accent);color:#0b0b0b;border-color:var(--accent);
+    }
+    .security h3{font-size:31px;line-height:1;letter-spacing:-.04em;margin:0 0 24px}
+    .security ul{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+    .security li{display:flex;gap:10px;align-items:flex-start}
+    .security li:before{content:"↳";color:var(--accent)}
+    .security .accent li:before{color:#0b0b0b}
+    .security .accent p{opacity:.72}
+
+    .metrics{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+    }
+    .metric{
+      padding:26px;border:1px solid var(--line);border-radius:18px;background:var(--surface);
+    }
+    .metric b{font-size:38px;letter-spacing:-.05em;display:block;line-height:1}
+    .metric span{color:var(--muted);font-size:13px;display:block;margin-top:12px}
+
+    .cta{
+      padding:100px 0 110px;
+    }
+    .cta-box{
+      border:1px solid rgba(182,255,59,.28);border-radius:28px;padding:42px;
+      background:
+        radial-gradient(circle at 85% 20%,rgba(182,255,59,.14),transparent 26%),
+        var(--surface);
+    }
+    .cta-box h2{font-size:clamp(38px,6vw,76px);line-height:.95;letter-spacing:-.055em;margin:0;max-width:900px}
+    .cta-box p{color:var(--muted);font-size:17px;max-width:700px}
+
+    footer{
+      border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:13px;
+    }
+    .footer-inner{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+
+    .reveal{opacity:0;transform:translateY(18px);transition:.6s ease}
+    .reveal.visible{opacity:1;transform:none}
+
+    @media(max-width:900px){
+      .nav-links{display:none}
+      .hero-sub,.section-head,.statement .inner,.security{grid-template-columns:1fr}
+      .flow{grid-template-columns:repeat(2,1fr)}
+      .architecture{grid-template-columns:1fr}
+      .arch-card.big{grid-row:auto}
+      .principles{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2,1fr)}
+      .section-head{gap:12px}
+    }
+
+    @media(max-width:560px){
+      .wrap{width:min(var(--max),calc(100% - 24px))}
+      header{padding-top:58px}
+      .flow,.metrics{grid-template-columns:1fr}
+      .cta-box{padding:28px}
+      h1{font-size:54px}
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <nav>
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand">
+        <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        KERNEL
+      </a>
+      <div class="nav-links">
+        <a href="#metodo">Método</a>
+        <a href="#arquitetura">Arquitetura</a>
+        <a href="#governanca">Governança</a>
+        <a href="#seguranca">Segurança</a>
+      </div>
+      <a class="nav-cta" href="#piloto">Versão candidata 1.0</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="wrap">
+      <div class="eyebrow"><span class="dot"></span> Projeto educacional · SENAI Americana</div>
+      <h1>Engenharia assistida por agentes, sem abrir mão de controle.</h1>
+
+      <div class="hero-sub">
+        <div>
+          <p class="lead">
+            KERNEL organiza a criação de aplicações web a partir de uma entrevista, conectando descoberta, requisitos, design, implementação, QA e entrega em um processo rastreável e verificável.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#metodo">Explorar metodologia →</a>
+            <a class="btn" href="#arquitetura">Ver arquitetura</a>
+          </div>
+        </div>
+        <div class="hero-side">
+          <strong style="color:var(--text);display:block;margin-bottom:8px">Escopo do piloto</strong>
+          Aplicações de cadastro, consulta e agendamento, com escopo controlado, dados sintéticos e validação humana em pontos decisivos.
+        </div>
+      </div>
+    </header>
+
+    <div class="statement">
+      <div class="wrap inner">
+        <div class="kicker">Princípio central</div>
+        <p>A IA propõe. O sistema valida. Pessoas autorizadas aprovam. Evidências sustentam cada entrega.</p>
+      </div>
+    </div>
+
+    <section id="metodo">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="kicker">01 · Método</div>
+          <div>
+            <h2>Um fluxo com decisões explícitas.</h2>
+            <p>Cada etapa produz artefatos vinculados à anterior. Aprovações congelam revisões específicas e mudanças posteriores reabrem apenas o que foi afetado.</p>
+          </div>
+        </div>
+
+        <div class="flow reveal">
+          <article class="step" data-step="01">
+            <strong>Descoberta</strong>
+            <p>Entrevista por voz ou texto, briefing conferido e origem de cada informação registrada.</p>
+          </article>
+          <article class="step" data-step="02">
+            <strong>Requisitos</strong>
+            <p>RF, RB, RNF, critérios observáveis e crítica separada antes da aprovação.</p>
+          </article>
+          <article class="step highlight" data-step="03">
+            <strong>Aprovação #1</strong>
+            <p>Congela requisitos, escopo, regras, perfis, restrições e critérios de aceite.</p>
+          </article>
+          <article class="step" data-step="04">
+            <strong>Design</strong>
+            <p>Protótipo navegável associado aos requisitos aprovados e aos estados relevantes.</p>
+          </article>
+          <article class="step highlight" data-step="05">
+            <strong>Aprovação #2</strong>
+            <p>Valida telas, navegação, estados e identidade visual para aquela revisão.</p>
+          </article>
+          <article class="step" data-step="06">
+            <strong>Implementação</strong>
+            <p>Agentes trabalham em workspace isolado, sobre template e ferramentas autorizadas.</p>
+          </article>
+          <article class="step" data-step="07">
+            <strong>QA + homologação</strong>
+            <p>Build, tipos, lint, unidade, integração, E2E, acessibilidade e revisão humana.</p>
+          </article>
+          <article class="step highlight" data-step="08">
+            <strong>Entrega verificável</strong>
+            <p>Pacote reproduzível, manifesto, hashes, evidências e aceite do commit homologado.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="arquitetura">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="kicker">02 · Arquitetura</div>
+          <div>
+            <h2>Monólito modular. Estado centralizado. Execução isolada.</h2>
+            <p>A arquitetura evita complexidade prematura: uma aplicação principal bem dividida, worker separado e PostgreSQL como persistência central.</p>
+          </div>
+        </div>
+
+        <div class="architecture">
+          <article class="arch-card big reveal">
+            <h3>Aplicação principal</h3>
+            <p>Next.js entrega a interface. Fastify concentra autenticação, regras de negócio, API e coordenação dos agentes.</p>
+            <div class="chips">
+              <span class="chip">Next.js</span>
+              <span class="chip">React</span>
+              <span class="chip">TypeScript strict</span>
+              <span class="chip">Fastify 5</span>
+              <span class="chip">Node.js 24 LTS</span>
+              <span class="chip">PostgreSQL 18</span>
+            </div>
+
+            <div class="diagram" aria-label="Diagrama simplificado da arquitetura">
+              <div class="row"><span class="node">Browser</span><span class="arrow">→</span><span class="node">Reverse Proxy</span></div>
+              <div class="row"><span style="width:24px"></span><span class="arrow">↳</span><span class="node">Next.js UI</span></div>
+              <div class="row"><span style="width:24px"></span><span class="arrow">↳</span><span class="node">Fastify API</span><span class="arrow">→</span><span class="node">PostgreSQL</span></div>
+              <div class="row"><span style="width:91px"></span><span class="arrow">↳</span><span class="node">Worker</span><span class="arrow">→</span><span class="node">Executor isolado</span></div>
+            </div>
+          </article>
+
+          <article class="arch-card reveal">
+            <h3>Estado oficial</h3>
+            <p>O backend é o único escritor do estado oficial. Agentes propõem operações; não recebem credenciais do banco da plataforma.</p>
+          </article>
+
+          <article class="arch-card reveal">
+            <h3>Fila persistente</h3>
+            <p>Jobs e retomadas sobrevivem a reinícios. O worker reconcilia operações interrompidas antes de agir novamente.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="governanca">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="kicker">03 · Governança</div>
+          <div>
+            <h2>Rastreabilidade antes de autonomia.</h2>
+            <p>O KERNEL preserva origem, revisão, autoria, dependências, evidências e autoridade de decisão ao longo de toda a construção.</p>
+          </div>
+        </div>
+
+        <div class="principles">
+          <article class="principle reveal">
+            <div class="n">01</div>
+            <h3>Fonte de verdade única</h3>
+            <p>O estado de requisitos é canônico. Briefings e visualizações derivam dele em vez de manter listas paralelas editáveis.</p>
+          </article>
+          <article class="principle reveal">
+            <div class="n">02</div>
+            <h3>Revisões imutáveis</h3>
+            <p>Artefatos aprovados não são sobrescritos. Novas mudanças criam novas revisões e preservam o histórico.</p>
+          </article>
+          <article class="principle reveal">
+            <div class="n">03</div>
+            <h3>Atualizações atômicas</h3>
+            <p>Uma mudança é aplicada por inteiro ou rejeitada por inteiro, junto com sua revisão e evento correspondente.</p>
+          </article>
+          <article class="principle reveal">
+            <div class="n">04</div>
+            <h3>Idempotência</h3>
+            <p>Operações repetidas com o mesmo identificador não duplicam efeitos; reuso com conteúdo diferente gera conflito.</p>
+          </article>
+          <article class="principle reveal">
+            <div class="n">05</div>
+            <h3>Critérios observáveis</h3>
+            <p>Requisitos vagos como “rápido” ou “seguro” precisam se transformar em métricas, testes ou verificações concretas.</p>
+          </article>
+          <article class="principle reveal">
+            <div class="n">06</div>
+            <h3>Aprovação humana</h3>
+            <p>Agentes não concedem a si mesmos permissões, aprovações ou aumento de limites operacionais.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="seguranca">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="kicker">04 · Segurança</div>
+          <div>
+            <h2>Código gerado é tratado como não confiável.</h2>
+            <p>O executor separa o código produzido pela IA da API, do banco e dos segredos institucionais.</p>
+          </div>
+        </div>
+
+        <div class="security">
+          <article class="panel reveal">
+            <h3>Fronteira do executor</h3>
+            <ul>
+              <li>Container sem privilégios dentro de VM exclusiva.</li>
+              <li>Sem Docker socket, diretório pessoal ou filesystem do host.</li>
+              <li>Raiz somente leitura e escrita limitada ao workspace.</li>
+              <li>Rede negada por padrão, liberando apenas o necessário.</li>
+              <li>Limites de CPU, memória, processos, disco e tempo.</li>
+            </ul>
+          </article>
+
+          <article class="panel accent reveal">
+            <h3>Autoridade continua fora do modelo.</h3>
+            <p>Prompts, código, logs e respostas de ferramentas são tratados como dados não confiáveis. A IA pode solicitar ações; o backend decide se elas são válidas e permitidas.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="piloto">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="kicker">05 · Piloto</div>
+          <div>
+            <h2>Metas mensuráveis, não promessas.</h2>
+            <p>A versão 1.0 é candidata. A metodologia só pode ser declarada concluída após execução e validação real dos casos previstos.</p>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <article class="metric reveal">
+            <b>3</b>
+            <span>projetos completos exigidos para concluir a validação da metodologia</span>
+          </article>
+          <article class="metric reveal">
+            <b>≤ 5</b>
+            <span>entidades de negócio no escopo inicial por aplicação</span>
+          </article>
+          <article class="metric reveal">
+            <b>≤ 3</b>
+            <span>perfis de usuário no primeiro recorte do piloto</span>
+          </article>
+          <article class="metric reveal">
+            <b>p95 ≤ 1s</b>
+            <span>meta inicial para operações CRUD nas condições definidas pelo piloto</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap">
+        <div class="cta-box reveal">
+          <div class="kicker" style="color:var(--accent);margin-bottom:22px">KERNEL · versão 1.0 candidata</div>
+          <h2>Menos “confie na IA”. Mais engenharia verificável.</h2>
+          <p>Uma metodologia para transformar descoberta em software mantendo escopo, autoridade, histórico, segurança e evidências sob controle humano.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#top">Voltar ao início ↑</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div>KERNEL · SENAI Americana</div>
+      <div>Projeto educacional · especificação candidata 1.0</div>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      }
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
