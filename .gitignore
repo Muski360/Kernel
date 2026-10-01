@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+output/
+.playwright-cli/
+*.tsbuildinfo
+.env*
+!.env.example
+npm-debug.log*
