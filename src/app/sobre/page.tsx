@@ -39,7 +39,7 @@ export default function About() {
         <div className="shell">
           <div className="about-hero-grid">
             <div className="about-hero-copy">
-              <h1>
+              <h1 className="about-hero-title">
                 A ideia é sua.
                 <br />O caminho,
                 <br />

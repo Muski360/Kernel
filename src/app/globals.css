@@ -1022,11 +1022,11 @@ details[open] > summary .expand-icon:after {
   padding: 65px 0 70px;
   display: grid;
 }
-.about-hero h1 {
+.about-hero-title {
   font-size: clamp(54px, 6.25vw, 94px);
   line-height: 1.06;
 }
-.about-hero h1 .subtle {
+.about-hero-title .subtle {
   white-space: nowrap;
 }
 .about-hero-copy > p {
@@ -1305,7 +1305,7 @@ details[open] > summary .expand-icon:after {
   .about-hero-grid {
     gap: 60px;
   }
-  .about-hero h1 {
+  .about-hero-title {
     font-size: 6.2vw;
   }
   .principle-grid {
@@ -1907,7 +1907,7 @@ details[open] > summary .expand-icon:after {
     gap: 38px;
     padding: 39px 0 35px;
   }
-  .about-hero h1 {
+  .about-hero-title {
     font-size: 11.2vw;
   }
   .about-hero-copy > p {

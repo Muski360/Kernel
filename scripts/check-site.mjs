@@ -187,157 +187,177 @@ try {
   await page.screenshot({ path: "output/playwright/landing-motion.png" });
   console.log("PASS reduced motion and regular entrance");
 
-  // The original mark remains the source of truth at rest and without motion.
   const originalSvg = await readFile("assets/isotipo_vetorizado.svg", "utf8");
   const originalPath = originalSvg.match(/\bd="([^"]+)"/)[1];
   const normalizePath = (path) => path.trim().replace(/\s+/g, " ");
   await page.goto(`${base}/sobre`, { waitUntil: "networkidle" });
   const outline = page.locator(".kernel-outline");
   const drop = page.locator(".kernel-drop");
+  const traveler = page.locator(".kernel-traveler");
   const playback = page.locator(".mark-playback");
-  await page.waitForFunction(
-    () =>
-      Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200,
-  );
+  const ink = page.locator(".kernel-ink-copy");
+
+  async function waitForTextCrossing() {
+    await page.waitForFunction(() => {
+      const ball = document.querySelector(".kernel-drop").getBoundingClientRect();
+      const title = document.querySelector(".about-hero-copy h1").getBoundingClientRect();
+      const x = ball.x + ball.width / 2;
+      const y = ball.y + ball.height / 2;
+      return ball.width > 20 && x > title.left + 25 && x < title.right - 45 &&
+        y > title.top + 15 && y < title.bottom - 15;
+    });
+  }
+
+  async function assertInkGeometry() {
+    const error = await page.evaluate(() => {
+      const ink = document.querySelector(".kernel-ink-copy");
+      const copy = ink.parentElement;
+      const box = ink.getBoundingClientRect();
+      const mask = ink.style.clipPath.match(/-?\d+(?:\.\d+)?/g).map(Number);
+      const ball = document.querySelector(".kernel-drop").getBoundingClientRect();
+      const title = copy.querySelector("h1").getBoundingClientRect();
+      const duplicate = ink.querySelector(".about-hero-title").getBoundingClientRect();
+      return Math.max(
+        Math.abs(box.x + mask[2] - ball.x - ball.width / 2),
+        Math.abs(box.y + mask[3] - ball.y - ball.height / 2),
+        Math.abs(mask[0] - ball.width / 2),
+        Math.abs(mask[1] - ball.height / 2),
+        ...["x", "y", "width", "height"].map((key) => Math.abs(title[key] - duplicate[key])),
+      );
+    });
+    assert(error < .03, `Text mask and ball are misaligned by ${error}px`);
+    assert.equal(await page.locator("h1").count(), 1);
+    assert.equal(await ink.getAttribute("aria-hidden"), "true");
+  }
+
+  async function assertInkPixels(label) {
+    await assertInkGeometry();
+    const copy = page.locator(".about-hero-copy").first();
+    const clip = await ink.evaluate((el) => el.style.clipPath.match(/-?\d+(?:\.\d+)?/g).map(Number));
+    const white = await copy.screenshot({ path: `output/playwright/about-ink-${label}.png` });
+    await ink.evaluate((el) => { el.style.visibility = "hidden"; });
+    const original = await copy.screenshot();
+    await ink.evaluate((el) => { el.style.removeProperty("visibility"); });
+    const pixels = await page.evaluate(async ({ white, original, clip }) => {
+      const images = await Promise.all([white, original].map(async (base64) => {
+        const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob());
+        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(bitmap, 0, 0);
+        return { data: ctx.getImageData(0, 0, canvas.width, canvas.height).data, width: canvas.width };
+      }));
+      let changedOutside = 0;
+      let whiteInside = 0;
+      const [a, b] = images;
+      for (let i = 0; i < a.data.length; i += 4) {
+        if (Math.abs(a.data[i] - b.data[i]) + Math.abs(a.data[i + 1] - b.data[i + 1]) + Math.abs(a.data[i + 2] - b.data[i + 2]) < 30) continue;
+        const x = (i / 4) % a.width;
+        const y = Math.floor(i / 4 / a.width);
+        const inside = ((x - clip[2]) / (clip[0] + 1.5)) ** 2 + ((y - clip[3]) / (clip[1] + 1.5)) ** 2 <= 1;
+        if (!inside) changedOutside++;
+        else if (a.data[i] > 240 && a.data[i + 1] > 240 && a.data[i + 2] > 240) whiteInside++;
+      }
+      return { changedOutside, whiteInside };
+    }, { white: white.toString("base64"), original: original.toString("base64"), clip });
+    assert.equal(pixels.changedOutside, 0, `${label}: color changes must stay inside the ball`);
+    assert(pixels.whiteInside > 80, `${label}: intersecting glyphs must render white`);
+  }
+
+  await waitForTextCrossing();
   await page.getByRole("button", { name: "Pausar animação" }).click();
-  const pausedPath = await outline.getAttribute("d");
-  const pausedTraveler = await page
-    .locator(".kernel-traveler")
-    .getAttribute("transform");
-  assert.notEqual(normalizePath(pausedPath), normalizePath(originalPath));
-  assert(Number(await drop.getAttribute("rx")) > 0);
-  await page.waitForTimeout(250);
-  assert.equal(
-    await outline.getAttribute("d"),
-    pausedPath,
-    "Pause holds the SVG geometry",
-  );
-  await page.screenshot({ path: "output/playwright/about-motion-detach.png" });
-  // An explicit pause must survive leaving the viewport and coming back.
+  const pausedTraveler = await traveler.getAttribute("transform");
+  const pausedMask = await ink.getAttribute("style");
+  await page.waitForTimeout(200);
+  assert.equal(await traveler.getAttribute("transform"), pausedTraveler);
+  assert.equal(await ink.getAttribute("style"), pausedMask);
+  await assertInkPixels("desktop");
+  await page.screenshot({ path: "output/playwright/about-motion-desktop.png" });
   await page.evaluate(() => scrollTo({ top: 1400, behavior: "instant" }));
   await page.waitForTimeout(150);
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await page.waitForTimeout(150);
-  assert.equal(
-    await page.locator(".kernel-traveler").getAttribute("transform"),
-    pausedTraveler,
-  );
+  assert.equal(await traveler.getAttribute("transform"), pausedTraveler);
+  await assertInkGeometry();
+
+  // Recompose a paused scene without restarting playback or desynchronizing text.
+  for (const width of [390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(200);
+    await assertInkGeometry();
+    assert.equal(await playback.getAttribute("aria-pressed"), "true");
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  }
   await playback.focus();
   await page.keyboard.press("Enter");
-  await page.waitForFunction(
-    (original) =>
-      document
-        .querySelector(".kernel-outline")
-        .getAttribute("d")
-        .trim()
-        .replace(/\s+/g, " ") === original &&
-      document.querySelector(".kernel-surface").getAttribute("filter") ===
-        "none",
-    normalizePath(originalPath),
-  );
-  assert.equal(
-    normalizePath(await outline.getAttribute("d")),
-    normalizePath(originalPath),
-  );
-  assert.equal(Number(await drop.getAttribute("rx")), 0);
-  assert.equal(
-    await page.locator(".kernel-surface").getAttribute("filter"),
-    "none",
-  );
+  const docking = await page.evaluate(() => new Promise((resolve) => {
+    const outline = document.querySelector(".kernel-outline");
+    const drop = document.querySelector(".kernel-drop");
+    const rotations = new Set();
+    let previous = { rx: 0, ry: 0 };
+    let minimumRadius = Infinity;
+    let maxMaskError = 0;
+    const deadline = performance.now() + 14000;
+    function sample() {
+      const rx = Number(drop.getAttribute("rx"));
+      const ry = Number(drop.getAttribute("ry"));
+      if (rx > 0) {
+        minimumRadius = Math.min(minimumRadius, rx, ry);
+        rotations.add(outline.getAttribute("transform"));
+        const ink = document.querySelector(".kernel-ink-copy");
+        const box = ink.getBoundingClientRect();
+        const mask = ink.style.clipPath.match(/-?\d+(?:\.\d+)?/g).map(Number);
+        const ball = drop.getBoundingClientRect();
+        maxMaskError = Math.max(maxMaskError,
+          Math.abs(box.x + mask[2] - ball.x - ball.width / 2),
+          Math.abs(box.y + mask[3] - ball.y - ball.height / 2));
+        previous = { rx, ry };
+      } else if (previous.rx > 0) {
+        const toOutline = outline.getScreenCTM().inverse().multiply(drop.getScreenCTM());
+        const contained = Array.from({ length: 96 }, (_, i) => {
+          const angle = i / 96 * Math.PI * 2;
+          return outline.isPointInFill(new DOMPoint(
+            previous.rx * Math.cos(angle), previous.ry * Math.sin(angle),
+          ).matrixTransform(toOutline));
+        }).every(Boolean);
+        resolve({ minimumRadius, contained, rotations: rotations.size, maxMaskError });
+        return;
+      }
+      if (performance.now() > deadline) resolve({ timedOut: true });
+      else requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  }));
+  assert.equal(docking.timedOut, undefined);
+  assert(docking.minimumRadius >= 250, "The same full-size ball survives the whole trip");
+  assert.equal(docking.contained, true, "The ball disappears only after complete reintegration");
+  assert(docking.rotations > 10, "The base reacts throughout the journey");
+  assert(docking.maxMaskError < .03, "The mask remains synchronized on every sampled frame");
+  assert.equal(normalizePath(await outline.getAttribute("d")), normalizePath(originalPath));
 
-  // Cross the repeat boundary inside the rest interval. Exact vector geometry
-  // must survive the wrap; raster comparison tolerates subpixel antialiasing.
-  const scene = page.locator(".kernel-scene");
-  const seamBefore = await scene.screenshot({
-    path: "output/playwright/loop-seam-before.png",
-  });
-  await page.waitForTimeout(1400);
-  const seamAfter = await scene.screenshot({
-    path: "output/playwright/loop-seam-after.png",
-  });
-  assert.equal(
-    normalizePath(await outline.getAttribute("d")),
-    normalizePath(originalPath),
-  );
-  assert.equal(Number(await drop.getAttribute("rx")), 0);
-  const seamDifference = await page.evaluate(
-    async (frames) => {
-      const pixels = await Promise.all(
-        frames.map(async (frame) => {
-          const bitmap = await createImageBitmap(
-            await (await fetch(`data:image/png;base64,${frame}`)).blob(),
-          );
-          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-          const context = canvas.getContext("2d");
-          context.drawImage(bitmap, 0, 0);
-          bitmap.close();
-          return context.getImageData(0, 0, canvas.width, canvas.height).data;
-        }),
-      );
-      let difference = 0;
-      for (let i = 0; i < pixels[0].length; i++)
-        difference += Math.abs(pixels[0][i] - pixels[1][i]);
-      return difference / pixels[0].length;
-    },
-    [seamBefore.toString("base64"), seamAfter.toString("base64")],
-  );
-  assert(
-    seamDifference < 0.02,
-    `The loop has a visible seam: average channel difference ${seamDifference}`,
-  );
-  await page.waitForFunction(
-    () =>
-      Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200,
-  );
-  assert.notEqual(
-    normalizePath(await outline.getAttribute("d")),
-    normalizePath(originalPath),
-    "The next cycle starts automatically",
-  );
+  await page.waitForFunction(() => Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await playback.waitFor({ state: "hidden" });
-  assert.equal(
-    normalizePath(await outline.getAttribute("d")),
-    normalizePath(originalPath),
-  );
+  assert.equal(await ink.count(), 0);
+  assert.equal(normalizePath(await outline.getAttribute("d")), normalizePath(originalPath));
   assert.equal(Number(await drop.getAttribute("rx")), 0);
-  const reducedPath = await outline.getAttribute("d");
-  await page.waitForTimeout(200);
-  assert.equal(await outline.getAttribute("d"), reducedPath);
-
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.getByRole("button", { name: "Pausar animação" }).waitFor();
-  await page.waitForFunction(
-    () =>
-      Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200,
-  );
+  await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "active" });
+  assert.equal(await ink.count(), 0, "Forced colors retain ordinary readable text");
+  await page.emulateMedia({ forcedColors: "none" });
+  await ink.waitFor({ state: "attached" });
+  await page.waitForFunction(() => Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200);
   await page.evaluate(() => scrollTo({ top: 1400, behavior: "instant" }));
   await page.waitForTimeout(250);
-  const suspendedPath = await page
-    .locator(".kernel-traveler")
-    .getAttribute("transform");
-  await page.waitForTimeout(250);
-  assert.equal(
-    await page.locator(".kernel-traveler").getAttribute("transform"),
-    suspendedPath,
-    "Offscreen animation is suspended",
-  );
+  const suspended = await traveler.getAttribute("transform");
+  await page.waitForTimeout(200);
+  assert.equal(await traveler.getAttribute("transform"), suspended, "Offscreen work stops");
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await page.setViewportSize({ width: 390, height: 844 });
-  await playback.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(500);
+  await waitForTextCrossing();
   await page.getByRole("button", { name: "Pausar animação" }).click();
+  await assertInkPixels("mobile");
   await page.screenshot({ path: "output/playwright/about-motion-mobile.png" });
-  assert(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth + 1,
-    ),
-  );
   await page.emulateMedia({ reducedMotion: "reduce" });
-  console.log(
-    "PASS SVG loop, vector/raster seam continuity, persistent keyboard pause, offscreen suspension, mobile and live reduced-motion fallback",
-  );
-
+  console.log("PASS hero journey, exact local text inversion (pixels and geometry), resize, docking, base reaction, keyboard pause, offscreen suspension and reduced-motion/forced-colors fallback");
   for (const route of ["/", "/sobre"]) {
     await page.goto(`${base}${route}`);
     await page.locator("footer").scrollIntoViewIfNeeded();
