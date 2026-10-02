@@ -89,10 +89,10 @@ export function ProcessDial() {
             type="button"
             aria-pressed={active === index}
             onClick={() => setActive(active === index ? null : index)}
-            aria-label={`${step.number} ${step.name}: ${step.minutes} minutos previstos`}
           >
-            <span className="mono">{step.number}</span>
+            <span className="mono">{step.number}</span>{" "}
             <span>{step.name}</span>
+            <span className="sr-only">: {step.minutes} minutos previstos</span>
           </button>
         ))}
       </div>

@@ -1,5 +1,26 @@
 import { kernelPath } from "./kernel-path";
 
+// Pull the original lobe outward before separation. The sine envelope leaves
+// both endpoints fixed, so the contour stays continuous with the other lobes.
+let stretchedSegment = 0;
+export const stretchedKernelPath = kernelPath.replace(
+  /C\s+([^CZ]+)/g,
+  (original, coordinates: string) => {
+    stretchedSegment += 1;
+    if (stretchedSegment < 12 || stretchedSegment > 31) return original;
+    const values = coordinates.trim().split(/\s+/).map(Number);
+    return `C ${values
+      .map((value, i) => {
+        const t = (stretchedSegment - 12 + (Math.floor(i / 2) + 1) / 3) / 20;
+        return (
+          value +
+          Math.sin(t * Math.PI) ** 2 * (i % 2 ? 45 : -110)
+        ).toFixed(3);
+      })
+      .join(" ")} `;
+  },
+);
+
 // Replace only the lower-left contour with a smooth neck. Keeping the original
 // cubic topology lets GSAP interpolate the outline without masks or cut seams.
 const neck = [

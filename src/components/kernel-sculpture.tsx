@@ -2,19 +2,23 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { kernelPath } from "./kernel-path";
-import { detachedKernelPath } from "./kernel-morph";
+import { detachedKernelPath, stretchedKernelPath } from "./kernel-morph";
+
+// One continuous flight, with room for the fragment to clear every lobe.
+const orbit =
+  "M515 1295 C210 1400 -230 1540 -300 1030 C-400 300 -100 -240 520 -390 C1220 -560 2160 -20 2310 700 C2490 1500 1960 2370 1100 2400 C500 2420 30 2070 20 1690 C15 1460 270 1370 515 1295";
 
 export function KernelSculpture() {
   const root = useRef<HTMLDivElement>(null);
-  const playback = useRef<gsap.core.Timeline | null>(null);
+  const syncPlayback = useRef<(() => void) | null>(null);
+  const manuallyPaused = useRef(false);
+  const [paused, setPaused] = useState(false);
   const filterId = useId().replaceAll(":", "");
-  const [phase, setPhase] = useState<"idle" | "playing" | "paused">("idle");
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+    gsap.registerPlugin(MotionPathPlugin);
     const scene = root.current!;
     const media = gsap.matchMedia();
     media.add(
@@ -24,119 +28,100 @@ export function KernelSculpture() {
         const surface = scene.querySelector(".kernel-surface")!;
         const traveler = scene.querySelector(".kernel-traveler")!;
         const drop = scene.querySelector(".kernel-drop")!;
-        const timeline = gsap.timeline({
-          paused: true,
-          onStart: () => setPhase("playing"),
-          onComplete: () => setPhase("idle"),
-        });
-        playback.current = timeline;
-        scene.dataset.motionReady = "true";
-        gsap.set(traveler, { x: 515, y: 1295 });
+        const timeline = gsap.timeline({ paused: true, repeat: -1 });
 
+        gsap.set(traveler, { x: 515, y: 1295 });
         timeline
-          .set(surface, { attr: { filter: `url(#${filterId})` } }, 0)
+          // Anticipation, separation, flight, absorption, rest. Every visible
+          // property returns to its starting value before the 8.8 s boundary.
+          .to(
+            shape,
+            {
+              attr: { d: stretchedKernelPath },
+              duration: 0.65,
+              ease: "sine.inOut",
+            },
+            0.55,
+          )
+          .set(surface, { attr: { filter: `url(#${filterId})` } }, 1.05)
           .to(
             shape,
             {
               attr: { d: detachedKernelPath },
-              duration: 0.72,
-              ease: "power2.inOut",
+              duration: 1.1,
+              ease: "sine.inOut",
             },
-            0.2,
+            1.1,
           )
           .to(
             drop,
-            { attr: { rx: 300, ry: 275 }, duration: 0.5, ease: "power2.out" },
-            0.25,
+            { attr: { rx: 260, ry: 240 }, duration: 0.7, ease: "sine.out" },
+            1.1,
           )
           .to(
             traveler,
             {
-              motionPath: {
-                path: [
-                  { x: 515, y: 1295 },
-                  { x: 115, y: 1440 },
-                  { x: -30, y: 800 },
-                  { x: 300, y: 55 },
-                  { x: 1130, y: -115 },
-                  { x: 2015, y: 520 },
-                  { x: 2050, y: 1530 },
-                  { x: 1430, y: 2100 },
-                  { x: 650, y: 1850 },
-                  { x: 515, y: 1295 },
-                ],
-                curviness: 1.1,
-              },
-              duration: 3.55,
-              ease: "power1.inOut",
+              motionPath: { path: orbit, autoRotate: true },
+              duration: 5.45,
+              ease: "sine.inOut",
             },
-            0.25,
+            1.1,
+          )
+          .to(
+            drop,
+            { attr: { rx: 280, ry: 223 }, duration: 1.35, ease: "sine.inOut" },
+            1.85,
+          )
+          .set(surface, { attr: { filter: "none" } }, 2.25)
+          .to(
+            drop,
+            { attr: { rx: 250, ry: 250 }, duration: 1.3, ease: "sine.inOut" },
+            4.8,
+          )
+          .set(surface, { attr: { filter: `url(#${filterId})` } }, 5.65)
+          .to(
+            shape,
+            {
+              attr: { d: stretchedKernelPath },
+              duration: 0.95,
+              ease: "sine.inOut",
+            },
+            5.65,
+          )
+          .to(
+            drop,
+            { attr: { rx: 0, ry: 0 }, duration: 0.65, ease: "sine.inOut" },
+            6,
           )
           .to(
             shape,
-            { attr: { d: kernelPath }, duration: 0.95, ease: "power3.out" },
-            1.15,
+            { attr: { d: kernelPath }, duration: 0.75, ease: "sine.inOut" },
+            6.6,
           )
-          .to(
-            drop,
-            { attr: { rx: 250, ry: 280 }, duration: 1.6, ease: "sine.inOut" },
-            1,
-          )
-          .to(
-            drop,
-            { attr: { rx: 0, ry: 0 }, duration: 0.35, ease: "power2.inOut" },
-            3.5,
-          )
-          .set(surface, { attr: { filter: "none" } }, 3.9);
+          .set(surface, { attr: { filter: "none" } }, 7.35)
+          .to({}, { duration: 1.45 });
 
-        // One entrance cycle. Native scrolling controls only the scene's exit;
-        // it never competes with replay or forces the reader through a pinned page.
         let visible = false;
-        let started = false;
-        let suspended = false;
-        function syncVisibility() {
-          if (!visible || document.hidden) {
-            if (timeline.isActive()) {
-              suspended = true;
-              timeline.pause();
-            }
-          } else if (suspended) {
-            suspended = false;
-            timeline.resume();
-          }
+        function sync() {
+          timeline.paused(
+            manuallyPaused.current || !visible || document.hidden,
+          );
         }
+        syncPlayback.current = sync;
         const observer = new IntersectionObserver(
           ([entry]) => {
-            visible = entry.isIntersecting;
-            if (visible && !started && !document.hidden) {
-              started = true;
-              timeline.play();
-            }
-            syncVisibility();
+            visible = entry.isIntersecting && entry.intersectionRatio >= 0.25;
+            sync();
           },
-          { threshold: 0.35 },
+          { threshold: [0, 0.25] },
         );
         observer.observe(scene);
-        document.addEventListener("visibilitychange", syncVisibility);
-        const desktop = gsap.matchMedia();
-        desktop.add("(min-width: 901px)", () => {
-          gsap.to(scene.querySelector(".kernel-sculpture"), {
-            y: 65,
-            rotation: -6,
-            ease: "none",
-            scrollTrigger: {
-              trigger: scene.closest(".about-hero"),
-              start: "top top",
-              end: "bottom top",
-              scrub: 0.8,
-            },
-          });
-        });
+        document.addEventListener("visibilitychange", sync);
+        scene.dataset.motionReady = "true";
         return () => {
           observer.disconnect();
-          document.removeEventListener("visibilitychange", syncVisibility);
-          desktop.revert();
-          playback.current = null;
+          document.removeEventListener("visibilitychange", sync);
+          syncPlayback.current = null;
           delete scene.dataset.motionReady;
         };
       },
@@ -146,52 +131,45 @@ export function KernelSculpture() {
   }, [filterId]);
 
   function toggle() {
-    const timeline = playback.current;
-    if (!timeline) return;
-    if (phase === "playing") {
-      timeline.pause();
-      setPhase("paused");
-    } else if (phase === "paused") {
-      timeline.resume();
-      setPhase("playing");
-    } else timeline.restart();
+    manuallyPaused.current = !manuallyPaused.current;
+    setPaused(manuallyPaused.current);
+    syncPlayback.current?.();
   }
 
-  const label =
-    phase === "playing"
-      ? "Pausar animação"
-      : phase === "paused"
-        ? "Continuar animação"
-        : "Repetir animação";
   return (
     <div className="kernel-scene" ref={root}>
       <svg
         className="kernel-sculpture"
-        viewBox="-480 -480 2960 2960"
+        viewBox="-720 -720 3440 3440"
         role="img"
-        aria-label="Símbolo do KERNEL"
+        aria-label="Símbolo do KERNEL: um fragmento se desprende, orbita e volta a integrar a mesma forma"
       >
         <defs>
           <filter
             id={filterId}
-            x="-35%"
-            y="-35%"
-            width="170%"
-            height="170%"
+            filterUnits="userSpaceOnUse"
+            x="-650"
+            y="-650"
+            width="3300"
+            height="3400"
             colorInterpolationFilters="sRGB"
           >
             <feGaussianBlur
               in="SourceGraphic"
-              stdDeviation="12"
+              stdDeviation="24"
               result="blur"
             />
             <feColorMatrix
               in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -13"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -8"
+              result="bridge"
             />
+            <feGaussianBlur in="bridge" stdDeviation="1" result="softBridge" />
+            <feComposite in="SourceGraphic" in2="softBridge" operator="over" />
           </filter>
         </defs>
+        <circle className="kernel-field" cx="1000" cy="1000" r="1120" />
         <g className="kernel-surface" fill="currentColor">
           <path className="kernel-outline" d={kernelPath} />
           <g className="kernel-traveler">
@@ -203,7 +181,8 @@ export function KernelSculpture() {
         className="mark-playback"
         type="button"
         onClick={toggle}
-        aria-label={label}
+        aria-label={paused ? "Continuar animação" : "Pausar animação"}
+        aria-pressed={paused}
       >
         <svg
           width="15"
@@ -214,19 +193,9 @@ export function KernelSculpture() {
           strokeWidth="1.4"
           aria-hidden="true"
         >
-          {phase === "playing" ? (
-            <path d="M7 4v12M13 4v12" />
-          ) : phase === "paused" ? (
-            <path d="m7 4 9 6-9 6Z" />
-          ) : (
-            <path d="M16 6a7 7 0 1 0 1 7M16 2v5h-5" />
-          )}
+          {paused ? <path d="m7 4 9 6-9 6Z" /> : <path d="M7 4v12M13 4v12" />}
         </svg>
-        {phase === "playing"
-          ? "Pausar"
-          : phase === "paused"
-            ? "Continuar"
-            : "Repetir"}
+        {paused ? "Continuar" : "Pausar"}
       </button>
     </div>
   );

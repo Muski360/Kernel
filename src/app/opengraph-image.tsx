@@ -54,7 +54,6 @@ export default function OpenGraphImage() {
           color: "#b9c0ad",
         }}
       >
-        <span>Inteligência artificial. Decisões humanas.</span>
         <span>SENAI Americana</span>
       </div>
     </div>,

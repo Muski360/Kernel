@@ -3,7 +3,9 @@ import Link from "next/link";
 import localFont from "next/font/local";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
+import "./motion.css";
 
 const sans = localFont({
   src: "../../public/fonts/dm-sans-latin.woff2",
@@ -26,7 +28,7 @@ const mono = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+  metadataBase: siteUrl,
   title: {
     default: "KERNEL — Da ideia ao software, em uma conversa",
     template: "%s | KERNEL",
