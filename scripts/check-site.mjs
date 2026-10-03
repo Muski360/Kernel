@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
 
 const port = process.env.PLAYWRIGHT_PORT || "3100";
@@ -47,6 +47,7 @@ try {
   browser = await chromium.launch();
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
+  page.setDefaultTimeout(15000);
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
@@ -146,6 +147,17 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await menu.getAttribute("aria-expanded"), "false");
   assert(await menu.evaluate((el) => document.activeElement === el));
+  await menu.click();
+  await page.mouse.click(380, 834);
+  assert.equal(await menu.getAttribute("aria-expanded"), "false", "Outside pointer closes the menu");
+  await menu.click();
+  await page.locator(".hero-actions .button").focus();
+  assert.equal(await menu.getAttribute("aria-expanded"), "false", "Leaving the header closes the menu");
+  await menu.click();
+  await page.setViewportSize({ width: 900, height: 900 });
+  await page.waitForFunction(() => document.querySelector(".menu-toggle").getAttribute("aria-expanded") === "false");
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await menu.getAttribute("aria-expanded"), "false", "Resizing does not reopen a stale menu");
   await menu.click();
   await page
     .getByRole("navigation", { name: "Navegação principal" })
@@ -630,6 +642,88 @@ try {
   await noFonts.close();
   console.log("PASS font-failure fallback");
 
+  const noImages = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 320, height: 800 } });
+  await noImages.route("**/*", (route) => route.request().resourceType() === "image" ? route.abort() : route.continue());
+  const imageFallback = await noImages.newPage();
+  await imageFallback.goto(base);
+  assert(await imageFallback.locator("h1").isVisible());
+  await imageFallback.locator(".hero-actions").getByRole("link", { name: "Conheça o projeto" }).click();
+  await imageFallback.waitForURL(`${base}/sobre`);
+  assert(await imageFallback.locator("h1").isVisible());
+  await noImages.close();
+  console.log("PASS content and route recovery with image requests blocked");
+
+  const faultContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await faultContext.addInitScript(() => {
+    const original = Element.prototype.querySelector;
+    window.restoreKernelQuery = () => { Element.prototype.querySelector = original; };
+    Element.prototype.querySelector = function (selector) {
+      if (selector === ".delivery-folder") throw new Error("Simulated enhancement failure");
+      return original.call(this, selector);
+    };
+  });
+  const fault = await faultContext.newPage();
+  await fault.goto(base);
+  const recovery = fault.getByRole("button", { name: "Tentar novamente" });
+  await recovery.waitFor({ state: "visible" });
+  assert(await fault.getByRole("heading", { name: "Não foi possível abrir esta página." }).isVisible());
+  assert(await fault.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  const faultAccessibility = await new AxeBuilder({ page: fault })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  assert.deepEqual(faultAccessibility.violations, []);
+  await fault.screenshot({ path: "output/playwright/error-mobile.png", fullPage: true });
+  await fault.evaluate(() => window.restoreKernelQuery());
+  await recovery.click();
+  await fault.locator(".hero h1").waitFor({ state: "visible" });
+  await faultContext.close();
+  console.log("PASS actual route error boundary, accessible recovery and retry after a simulated enhancement failure");
+
+  const assetPaths = (await readdir("public", { recursive: true }))
+    .filter((file) => /\.(png|svg|woff2)$/.test(file))
+    .map((file) => `/${file.replaceAll("\\", "/")}`);
+  for (const path of [...assetPaths, "/icon.svg", "/robots.txt", "/sitemap.xml", "/llms.txt"]) {
+    const response = await fetch(`${base}${path}`);
+    assert.equal(response.status, 200, `${path} must be served`);
+    assert((await response.arrayBuffer()).byteLength > 0, `${path} must not be empty`);
+  }
+  const origin = (await page.evaluate(() => document.querySelector('meta[property="og:url"]')?.content))
+    || "https://kernel.muski.workers.dev";
+  const robots = await (await fetch(`${base}/robots.txt`)).text();
+  const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+  assert(robots.includes(new URL("/sitemap.xml", origin).href));
+  for (const route of ["/", "/sobre"]) assert(sitemap.includes(new URL(route, origin).href));
+  const destinations = new Set();
+  for (const route of ["/", "/sobre"]) {
+    await page.goto(`${base}${route}`);
+    const links = await page.locator("a[href]").evaluateAll((elements) => elements
+      .map((element) => new URL(element.href))
+      .filter((url) => url.origin === location.origin)
+      .map((url) => url.pathname + url.hash));
+    links.forEach((url) => destinations.add(url));
+  }
+  for (const destination of destinations) {
+    const response = await fetch(new URL(destination.split("#")[0], base));
+    assert.equal(response.status, 200, `Internal link: ${destination}`);
+    await page.goto(`${base}${destination}`);
+    if (destination.includes("#")) assert(await page.evaluate(() => Boolean(document.getElementById(decodeURIComponent(location.hash.slice(1))))));
+  }
+  console.log("PASS public assets, robots/sitemap/llms and all internal link/anchor destinations");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const route of ["/", "/sobre", "/pagina-inexistente"]) {
+    for (const width of [540, 680, 681, 900, 1024, 1920, 2560]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${base}${route}`);
+      assert(await page.locator("h1").isVisible());
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${route} reflow at ${width}px`);
+    }
+  }
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto(base);
+  await page.locator("#possibilidades").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "output/playwright/landing-landscape.png" });
+  console.log("PASS breakpoint boundaries, ultrawide layouts and landscape reflow");
+
   await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const width of [320, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -679,7 +773,7 @@ try {
   assert.match(social.headers.get("content-type"), /image\/png/);
   assert.equal(
     createHash("sha256")
-      .update(await readFile("temp/prototype.html"))
+      .update(await readFile("docs/references/prototype.html"))
       .digest("hex"),
     "c293ae2acb104e6cd65ef2edf07488732df21b61be9900c0b2987ce1b6d0a16a",
     "Reference prototype remains untouched",
@@ -687,6 +781,43 @@ try {
   console.log(
     "PASS responsive 404, global cursor and Lenis, reduced motion, axe, recovery links, social image and untouched prototype",
   );
+  for (const engine of [firefox, webkit]) {
+    const secondary = await engine.launch();
+    try {
+      const secondaryPage = await secondary.newPage({ reducedMotion: "reduce" });
+      const engineErrors = [];
+      secondaryPage.on("pageerror", (error) => engineErrors.push(error.message));
+      for (const width of [390, 768, 1440]) {
+        await secondaryPage.setViewportSize({ width, height: 900 });
+        for (const route of ["/", "/sobre", "/pagina-inexistente"]) {
+          const response = await secondaryPage.goto(`${base}${route}`);
+          assert((route === "/pagina-inexistente" ? [404] : [200, 304]).includes(response.status()),
+            `${engine.name()} ${route}: expected a successful response or valid cache revalidation`);
+          assert(await secondaryPage.locator("h1").isVisible());
+          assert(await secondaryPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${engine.name()} ${route} at ${width}px`);
+        }
+      }
+      await secondaryPage.goto(base);
+      await secondaryPage.locator(".process-step summary").nth(2).click();
+      assert.equal(await secondaryPage.locator(".process-step[open]").count(), 1);
+      await secondaryPage.getByRole("button", { name: /04 Construção\s*: 12 minutos previstos/ }).click();
+      assert.match(await secondaryPage.locator(".dial-value").textContent(), /12/);
+      await secondaryPage.locator(".hero-actions").getByRole("link", { name: "Conheça o projeto" }).click();
+      await secondaryPage.waitForURL(`${base}/sobre`);
+      await secondaryPage.emulateMedia({ reducedMotion: "no-preference" });
+      await secondaryPage.getByRole("button", { name: "Pausar animação" }).waitFor({ state: "visible" });
+      await secondaryPage.waitForFunction(() => Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200);
+      await secondaryPage.getByRole("button", { name: "Pausar animação" }).click();
+      const stopped = await secondaryPage.locator(".kernel-traveler").getAttribute("transform");
+      await secondaryPage.waitForTimeout(150);
+      assert.equal(await secondaryPage.locator(".kernel-traveler").getAttribute("transform"), stopped);
+      assert.deepEqual(engineErrors, [], `${engine.name()} console`);
+      await secondaryPage.screenshot({ path: `output/playwright/about-${engine.name()}.png` });
+      console.log(`PASS ${engine.name()}: routes, reflow, accordions, dial, navigation and animated/pause state`);
+    } finally {
+      await secondary.close();
+    }
+  }
   console.log("All production browser checks passed.");
 } finally {
   await browser?.close();

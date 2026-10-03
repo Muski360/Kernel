@@ -25,7 +25,7 @@ A plataforma verifica capacidade antes de iniciar a conversa. Ao ultrapassar os 
 
 **Decisões técnicas:** Next.js com App Router, React e TypeScript na interface; Node.js 24 LTS, Fastify 5 e PostgreSQL 18 no backend; Gemini 3.8 Live para voz, Gemini 3.8 Flash para engenharia e Stitch via MCP para design. O código gerado roda em executor isolado e passa por testes de unidade, integração e E2E.
 
-1. [Regras de negócio e metodologia](RegrasDeNegocio/Metodologia.md): fonte normativa para escopo, stack, aprovações, dados, operação e critérios do piloto.
-2. [Auditoria](AUDITORIA_KERNEL.md): registro dos problemas da versão anterior e de seu tratamento documental, com escopo corrigido para esta pasta.
+1. [Regras de negócio e metodologia](Metodologia.md): fonte normativa para escopo, stack, aprovações, dados, operação e critérios do piloto.
+2. [Auditoria do site](auditoria-site.md): decisões visuais, organização do código e evidências de validação do site institucional.
 
 Titular único e prazo de entrega de 30 minutos são requisitos fixos do produto. O prazo não encerra a execução: a plataforma deve continuar trabalhando quando houver atraso. Custo, distribuição de tempo entre etapas e complexidade admitida serão calibrados no piloto para cumprir esses requisitos. A versão final depende das evidências de entrega previstas na metodologia; a documentação não comprova, por si só, que a plataforma funciona.

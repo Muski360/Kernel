@@ -4,8 +4,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { CustomEase } from "gsap/CustomEase";
-import { kernelPath } from "./kernel-path";
-import { detachedKernelPath } from "./kernel-morph";
+import { kernelPath } from "@/lib/brand/kernel-path";
+import { detachedKernelPath } from "@/lib/brand/kernel-morph";
 
 const pullStreaks = Array.from({ length: 18 }, (_, i) => ({
   phase: i * .618 % 1,

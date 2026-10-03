@@ -3,11 +3,13 @@ import Link from "next/link";
 import localFont from "next/font/local";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { SiteMotion } from "@/components/site-motion";
+import { SiteMotion } from "@/components/motion/site-motion";
 import { siteUrl } from "@/lib/site";
 import "lenis/dist/lenis.css";
-import "./globals.css";
-import "./motion.css";
+import "@/styles/globals.css";
+import "./home.css";
+import "./sobre/about.css";
+import "@/styles/motion.css";
 
 const sans = localFont({
   src: "../../public/fonts/dm-sans-latin.woff2",
@@ -38,7 +40,9 @@ export const metadata: Metadata = {
   description:
     "Conheça a proposta do KERNEL: criar pequenas aplicações web a partir de uma conversa, com aprovações suas em cada decisão. Projeto educacional do SENAI Americana.",
   applicationName: "KERNEL",
+  alternates: { canonical: "/" },
   openGraph: {
+    url: "/",
     title: "KERNEL — Da ideia ao software, em uma conversa",
     description:
       "Você conduz a ideia. Os agentes ajudam a construir. Conheça o projeto educacional KERNEL.",

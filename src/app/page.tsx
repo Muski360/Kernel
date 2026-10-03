@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Arrow, Check } from "@/components/icons";
-import { ProcessDial } from "@/components/process-dial";
-import { steps } from "@/components/process";
-import { ProjectInvitation } from "@/components/project-invitation";
+import { ProcessDial } from "./_components/process-dial";
+import { steps } from "@/content/process";
+import { ProjectInvitation } from "./_components/project-invitation";
+import { ApplicationExamples } from "./_components/application-examples";
+import { HomeMotion } from "./_components/home-motion";
 
 const questions = [
   [
@@ -36,7 +38,7 @@ export default function Home() {
             <span>Sua ideia.</span>
             <span>Software em</span>
             <span className="accent">
-              30 minutos<span className="heading-period">.</span>
+              30 minutos.
             </span>
           </h1>
           <p className="hero-description">
@@ -114,144 +116,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="possibilidades"
-        className="possibilities shell section-space"
-      >
-        <div className="section-heading">
-          <div>
-            <h2>
-              Pequenas aplicações.
-              <br />
-              <span className="subtle">Problemas concretos.</span>
-            </h2>
-          </div>
-          <p>
-            O primeiro piloto tem um recorte definido: aplicações web de
-            cadastro, consulta e agendamento, com dados fictícios.
-          </p>
-        </div>
-        <div className="possibility-grid">
-          <article className="possibility">
-            <div className="example-visual registration" aria-hidden="true">
-              <div className="mini-window">
-                <div className="mini-window-bar">
-                  <span />
-                  <span />
-                  <span />
-                  <i>Cadastro de materiais</i>
-                </div>
-                <div className="mini-window-content">
-                  <span className="mock-label">NOVO MATERIAL</span>
-                  <span className="mock-input">
-                    Kit de ferramentas <span>↵</span>
-                  </span>
-                  <div className="mock-input-row">
-                    <span className="mock-input">Oficina 01</span>
-                    <span className="mock-input">12 un.</span>
-                  </div>
-                  <span className="mock-submit">
-                    Salvar cadastro <span>+</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="possibility-title">
-              <h3>Organize cadastros.</h3>
-            </div>
-            <p>
-              Cadastre informações e defina os campos e as regras do seu
-              sistema.
-            </p>
-          </article>
-          <article className="possibility">
-            <div className="example-visual consultation" aria-hidden="true">
-              <div className="mini-window">
-                <div className="mini-window-bar">
-                  <span />
-                  <span />
-                  <span />
-                  <i>Consulta de materiais</i>
-                </div>
-                <div className="mini-window-content">
-                  <span className="mock-search">
-                    <span>⌕</span> Buscar material
-                  </span>
-                  {["Kit de ferramentas", "Multímetro", "Paquímetro"].map(
-                    (item, i) => (
-                      <div className="mock-result" key={item}>
-                        <span className="mock-file">0{i + 1}</span>
-                        <span>{item}</span>
-                        <span>↗</span>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="possibility-title">
-              <h3>Encontre informações.</h3>
-            </div>
-            <p>
-              Consulte registros com os filtros e as permissões que você
-              aprovou.
-            </p>
-          </article>
-          <article className="possibility">
-            <div className="example-visual scheduling" aria-hidden="true">
-              <div className="mini-window">
-                <div className="mini-window-bar">
-                  <span />
-                  <span />
-                  <span />
-                  <i>Agenda de salas</i>
-                </div>
-                <div className="mini-window-content">
-                  <div className="mock-days">
-                    <span>
-                      SEG<b>12</b>
-                    </span>
-                    <span>
-                      TER<b>13</b>
-                    </span>
-                    <span className="selected">
-                      QUA<b>14</b>
-                    </span>
-                    <span>
-                      QUI<b>15</b>
-                    </span>
-                    <span>
-                      SEX<b>16</b>
-                    </span>
-                  </div>
-                  <div className="mock-event">
-                    <span>09:00</span>
-                    <span>
-                      Oficina de projeto<small>Sala 02 · 1 hora</small>
-                    </span>
-                  </div>
-                  <div className="mock-free">
-                    10:00 <span>Horário disponível</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="possibility-title">
-              <h3>Planeje agendamentos.</h3>
-            </div>
-            <p>
-              Organize reservas e estabeleça regras para horários e
-              cancelamentos.
-            </p>
-          </article>
-        </div>
-        <div className="scope-footnote">
-          <p>
-            Exemplos com dados fictícios. O piloto não inclui pagamentos,
-            integrações externas na aplicação ou publicação automática.
-          </p>
-        </div>
-      </section>
+      <ApplicationExamples />
 
       <section className="ownership light-section">
         <div className="shell ownership-layout">
@@ -318,6 +183,7 @@ export default function Home() {
         </div>
       </section>
       <ProjectInvitation />
+      <HomeMotion />
     </main>
   );
 }

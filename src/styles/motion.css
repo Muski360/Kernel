@@ -1,0 +1,105 @@
+.kernel-cursor {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+}
+@keyframes enter {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(30px);
+  }
+  to {
+    clip-path: inset(0);
+    transform: translateY(0);
+  }
+}
+@keyframes dial-enter {
+  0% {
+    stroke-dashoffset: 1.8;
+    opacity: 0.2;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes cursor-tone-in {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes value-enter {
+  from {
+    opacity: 0.4;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes error-settle {
+  from {
+    transform: scale(0.82) rotate(-45deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  .kernel-cursor {
+    --cursor-fill: var(--paper);
+    --cursor-outline: var(--ink);
+    --cursor-feedback: var(--green);
+    display: block;
+  }
+  .kernel-cursor[data-visible] {
+    opacity: 1;
+    transition: opacity 0.14s;
+  }
+  html.kernel-pointer,
+  html.kernel-pointer * {
+    cursor: none !important;
+  }
+  .kernel-cursor svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--cursor-fill);
+    stroke: var(--cursor-outline);
+    stroke-width: 85;
+    paint-order: stroke fill;
+    overflow: visible;
+    transform-origin: 50% 50%;
+    transition: transform 0.25s var(--ease), fill 0.12s ease-out, stroke 0.12s ease-out;
+  }
+  .kernel-cursor[data-surface="light"] {
+    --cursor-fill: var(--ink);
+    --cursor-outline: transparent;
+    --cursor-feedback: var(--ink);
+  }
+  .kernel-cursor[data-surface="light"] svg {
+    animation: cursor-tone-in 0.22s var(--ease);
+  }
+  .kernel-cursor[data-state="link"] svg {
+    fill: var(--cursor-feedback);
+    transform: rotate(-12deg) scale(1.16);
+  }
+  .kernel-cursor[data-pressed]:not([data-state="text"]) svg {
+    transform: rotate(-6deg) scale(0.9);
+  }
+  .kernel-cursor[data-state="text"] svg {
+    transform: none;
+  }
+  .kernel-cursor[data-selecting] svg {
+    fill: var(--cursor-feedback);
+  }
+}

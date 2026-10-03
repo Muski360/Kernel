@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Arrow } from "@/components/icons";
-import { kernelPath } from "@/components/kernel-path";
+import { kernelPath } from "@/lib/brand/kernel-path";
 
 export default function NotFound() {
   return (

@@ -10,6 +10,7 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const header = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -19,12 +20,33 @@ export function Header() {
         menuButton.current?.focus();
       }
     }
+    function onOutsidePointer(event: PointerEvent) {
+      if (event.target instanceof Node && !header.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    const mobile = window.matchMedia("(max-width: 680px)");
+    function onResize(event: MediaQueryListEvent) {
+      if (!event.matches) setOpen(false);
+    }
     document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
+    document.addEventListener("pointerdown", onOutsidePointer);
+    mobile.addEventListener("change", onResize);
+    return () => {
+      document.removeEventListener("keydown", onEscape);
+      document.removeEventListener("pointerdown", onOutsidePointer);
+      mobile.removeEventListener("change", onResize);
+    };
   }, [open]);
 
   return (
-    <header className="site-header">
+    <header
+      ref={header}
+      className="site-header"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <div className="shell header-inner">
         <Link
           className="brand-link"

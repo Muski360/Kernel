@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Arrow } from "./icons";
+import { Arrow } from "@/components/icons";
 
 export function ProjectInvitation() {
   return (

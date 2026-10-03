@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
-import { kernelPath } from "./kernel-path";
+import { kernelPath } from "@/lib/brand/kernel-path";
 
 // A straightened pair of KERNEL lobes: full round ends and an organic waist.
 // The center stays on the pointer hotspot throughout text selection.

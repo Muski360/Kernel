@@ -19,27 +19,32 @@ Abra `http://localhost:3000`.
 npm run lint
 npm run typecheck
 npm run build
-npx playwright install chromium
+npx playwright install chromium firefox webkit
 npm run test:e2e
 npm start
 ```
 
-O teste E2E inicia sua própria instância de produção na porta 3100 e a encerra ao concluir. Verifica landing, Sobre e 404 em cinco larguras, navegação, menu móvel, teclado, perguntas frequentes, planejamento interativo e acessibilidade com axe. Testa o cursor e a rolagem com Lenis nas três páginas; na landing e no Sobre, também verifica âncoras com foco, histórico, toque nativo, preferências de movimento e trocas repetidas de rota sem duplicar o cursor. Na hero do Sobre, compara pixels para confirmar que a tipografia fica branca somente na interseção com a bolinha e mede o alinhamento da máscara durante o percurso e após redimensionamentos. Também confere a reintegração da mesma bola, reação da base, pausa persistente, suspensão fora da tela e alternativas para movimento reduzido e cores forçadas. Conteúdo sem JavaScript, falha de fontes e preservação do protótipo têm verificações próprias. Capturas ficam em `output/playwright/`. Defina `PLAYWRIGHT_PORT` se 3100 estiver ocupada.
+O E2E inicia uma instância de produção na porta 3100 e a encerra ao concluir. Verifica landing, Sobre e 404 em larguras de 320 a 2560 px, incluindo limites de breakpoints e orientação horizontal. Também exercita teclado, toque, menu, acordeões, mostrador, âncoras, histórico, cursor e trocas de rota. Firefox e WebKit têm verificações próprias de layout, navegação e animação.
+
+Na hero do Sobre, a suíte compara pixels e geometria da máscara, confere a reintegração da bola, a pausa persistente e a suspensão fora da tela. Outros cenários cobrem movimento reduzido, cores forçadas, ausência de JavaScript, falhas de fontes e imagens, exceção de rota com recuperação, assets públicos e destinos de links internos. O axe verifica acessibilidade nos cenários móvel, desktop, 404 e erro de rota. Capturas ficam em `output/playwright/`. Defina `PLAYWRIGHT_PORT` se 3100 estiver ocupada.
 
 Não há lógica de negócio isolável, API ou banco neste site institucional; testes de unidade e integração não se aplicam a este escopo. O backend da plataforma descrito na metodologia não foi implementado aqui.
 
-Validação em 02/10/2026: build, TypeScript, ESLint e E2E aprovados em Node.js 24. Landing, Sobre e 404 foram verificadas em 320, 390, 768, 1280 e 1440 px; axe não encontrou violações WCAG nos cenários móvel e desktop. Lighthouse 12.8.2 em produção local, com simulação móvel e Chrome 153: desempenho **95** no Sobre após a interação com a tipografia; acessibilidade, boas práticas e SEO **100**, LCP de **2,9 s** e CLS **0**. Esses números são medições de laboratório, não de tráfego real; viewport emulado não substitui teste em dispositivo físico.
+Resultados desta passagem em [docs/auditoria-site.md](docs/auditoria-site.md). A inspeção por viewport emulado não substitui teste em aparelho físico.
+
+Histórico de 02/10/2026: build, TypeScript, ESLint e E2E aprovados em Node.js 24. Landing, Sobre e 404 foram verificadas em 320, 390, 768, 1280 e 1440 px; axe não encontrou violações WCAG nos cenários móvel e desktop. Lighthouse 12.8.2 em produção local, com simulação móvel e Chrome 153: desempenho **95** no Sobre; acessibilidade, boas práticas e SEO **100**, LCP de **2,9 s** e CLS **0**. São medições de laboratório, não de tráfego real.
 
 Após o refinamento da homepage, nas mesmas condições de laboratório: desempenho **94**, acessibilidade, boas práticas e SEO **100**; LCP de **3,0 s**, TBT de **40 ms** e CLS **0**. Relatório em `output/playwright/home-lighthouse.json`.
 
 ## Conteúdo e decisões
 
-- `src/app/page.tsx`: landing; `src/app/sobre/page.tsx`: Sobre.
-- `src/components/process.ts`: cinco etapas e orçamentos documentados (5, 4, 5, 12 e 4 minutos).
-- `src/app/globals.css` e `src/app/motion.css`: composição responsiva, scrollbar, controles e animações nativas. O mostrador mantém cinco arcos proporcionais às etapas, 12 marcações e seleção por botão; representa o planejamento, sem cronômetro ou simulação de operação real.
-- `site-motion.tsx`: Lenis 1.3.26 e GSAP/ScrollTrigger compartilham um único ticker, seguindo a [integração oficial](https://github.com/darkroomengineering/lenis#gsap-scrolltrigger). O layout compartilhado aplica scroll suave e cursor à landing, ao Sobre e à 404. Cada troca de rota encerra os listeners e o ticker anteriores; as animações de objetos da homepage continuam limitadas a seus elementos. Teclado e mudança de foco interrompem a inércia; âncoras preservam URL, histórico e foco, e o toque mantém sua inércia nativa. `kernel-cursor.tsx` reutiliza o isotipo com estados de hover e clique, sem atraso na posição, e atualiza o contraste após navegar e sobre elementos SVG. Sobre texto, o mesmo contorno se transforma em duas bolinhas conectadas por uma haste, usando MorphSVG do GSAP já instalado. A transição é reversível; o arraste mantém a haste no ponto exato do mouse e preserva seleção e cópia nativas. Menus e controles especiais mantêm seus cursores nativos. Ambos os efeitos respeitam movimento reduzido e cores forçadas; o cursor também fica desativado em telas de toque. Lenis é a única dependência nova (5,4 kB gzip no arquivo distribuído, sem contar o restante do bundle).
-- `public/brand/`: cópias dos assets originais; o enquadramento dos logotipos usa CSS. `public/fonts/`: fontes locais com suas licenças OFL. Não há requisições a provedores de fontes em execução.
-- `kernel-sculpture.tsx` faz a bolinha percorrer a hero do Sobre em um ciclo de 11,45 segundos, seguindo os limites reais do título e do texto de apoio. A mesma posição e os mesmos raios controlam o SVG e o recorte de uma cópia visual branca da tipografia, sem duplicar o título acessível. A trajetória se adapta ao layout e ao carregamento das fontes; a base oscila suavemente e a bola se reintegra antes de desaparecer. A pausa manual persiste ao rolar ou redimensionar. Fora da hero ou com a aba oculta, a animação é suspensa; movimento reduzido, cores forçadas ou ausência de JavaScript preservam o símbolo e os textos estáticos. O protótipo permanece intacto e não é importado pela aplicação.
+1. `src/app/`: páginas e componentes exclusivos de rota em `_components/`. A home mantém seus exemplos e sua coreografia; o Sobre mantém a escultura. `error.tsx` oferece tentativa de recuperação e retorno ao início.
+2. `src/components/`: identidade, cabeçalho, rodapé, ícones e motion compartilhado. Lenis e ScrollTrigger usam o mesmo ticker; teclado, foco e toque mantêm os comportamentos verificados. O cursor preserva seleção e cópia nativas e desativa sua decoração com movimento reduzido, cores forçadas ou toque.
+3. `src/content/process.ts` concentra as cinco etapas e calcula o total do mostrador a partir dos orçamentos documentados. `src/lib/brand/` concentra o contorno original e sua deformação; `src/lib/site.ts` define a origem pública.
+4. `src/styles/` concentra estilos compartilhados. `src/app/home.css` e `src/app/sobre/about.css` organizam as composições por rota, com imports globais no layout para manter a ordem. Os exemplos usam CSS Module. As folhas finais somam 42.900 bytes, contra 45.788 antes da passagem.
+5. `public/` contém apenas assets usados pelo site e licenças das fontes locais. `assets/` guarda os originais fornecidos. `docs/references/` guarda os protótipos, sem importá-los pela aplicação.
+
+A escultura do Sobre mantém um ciclo de 11,45 segundos e usa a mesma posição e os mesmos raios para o SVG e a máscara da cópia visual da tipografia. A equipe pode ajustar essa animação no componente da rota sem alterar o cursor ou os estilos da home. A pausa manual persiste durante rolagem e redimensionamento; a cena suspende o trabalho fora da tela ou com a aba oculta. O teste confirma que o protótipo original mantém o mesmo hash.
 
 O site apresenta a proposta e o estado documental do projeto. Não oferece cadastro, autenticação, geração de software ou integrações com Gemini/Stitch. Os links de navegação funcionam; o acesso ao piloto depende da implementação futura da plataforma. Não há analytics nem coleta de dados.
 

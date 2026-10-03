@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { steps } from "./process";
+import { steps, totalMinutes } from "@/content/process";
 
 export function ProcessDial() {
   const [active, setActive] = useState<number | null>(null);
@@ -26,15 +26,15 @@ export function ProcessDial() {
             const elapsed = steps
               .slice(0, index)
               .reduce((sum, item) => sum + item.minutes, 0);
-            const rotation = (elapsed / 30) * 360 - 90;
+            const rotation = (elapsed / totalMinutes) * 360 - 90;
             return (
               <circle
                 key={step.number}
                 cx="260"
                 cy="260"
                 r="207"
-                pathLength="30"
-                strokeDasharray={`${step.minutes - 0.42} ${30 - step.minutes + 0.42}`}
+                pathLength={totalMinutes}
+                strokeDasharray={`${step.minutes - 0.42} ${totalMinutes - step.minutes + 0.42}`}
                 transform={`rotate(${rotation} 260 260)`}
                 className={`dial-segment ${active === null || active === index ? "active" : ""}`}
                 style={{ animationDelay: `${index * 60}ms` }}
@@ -48,7 +48,7 @@ export function ProcessDial() {
             key={active ?? "total"}
             data-selected={selected ? "" : undefined}
           >
-            {selected ? String(selected.minutes).padStart(2, "0") : "30"}
+            {String(selected?.minutes ?? totalMinutes).padStart(2, "0")}
             <span>min</span>
           </span>
           <span className="dial-description">

@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Arrow } from "@/components/icons";
-import { KernelSculpture } from "@/components/kernel-sculpture";
+import { KernelSculpture } from "./_components/kernel-sculpture";
 
 export const metadata: Metadata = {
   title: "Sobre o projeto",
   description:
     "A proposta, os princípios e a equipe do KERNEL. Um projeto educacional do SENAI Americana para estudar a criação de software com inteligência artificial e decisões humanas.",
+  alternates: { canonical: "/sobre" },
+  openGraph: {
+    title: "Sobre o projeto | KERNEL",
+    description: "A proposta, os princípios e a equipe do projeto educacional KERNEL, do SENAI Americana.",
+    url: "/sobre",
+    siteName: "KERNEL",
+    locale: "pt_BR",
+    type: "website",
+  },
 };
 
 const principles = [

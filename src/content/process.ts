@@ -45,3 +45,5 @@ export const steps = [
     decision: "Seu aceite final",
   },
 ] as const;
+
+export const totalMinutes = steps.reduce((total, step) => total + step.minutes, 0);

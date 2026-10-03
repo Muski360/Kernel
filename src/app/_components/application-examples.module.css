@@ -1,0 +1,247 @@
+.examples {
+  display: grid;
+  gap: 32px;
+}
+.example {
+  display: grid;
+  grid-template-columns: 0.85fr 1fr;
+  align-items: center;
+  gap: 12%;
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+}
+.copy h3 {
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: -0.05em;
+  line-height: 1.15;
+}
+.copy p {
+  max-width: 320px;
+  margin-top: 18px;
+  color: #b4baab;
+  font-size: 15px;
+}
+.visual {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 280px;
+  padding: 28px;
+  overflow: hidden;
+}
+.window {
+  width: 100%;
+  max-width: 410px;
+  background: #191e14;
+  border: 1px solid #576044;
+  border-radius: 4px;
+  transform: rotate(-2deg);
+  transition: transform 0.6s var(--ease);
+}
+.windowBar {
+  padding: 12px 18px;
+  border-bottom: 1px solid #485139;
+  color: #c3cdb4;
+  font-size: 11px;
+}
+.windowContent {
+  padding: 22px;
+  font-size: 13px;
+}
+.label {
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  color: #bdc8aa;
+}
+.input {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #4d593e;
+  border-radius: 2px;
+  color: #d5dfc6;
+}
+.input > span {
+  color: #a5b48b;
+}
+.inputRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 8px;
+  margin-top: 9px;
+}
+.submit {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 2px;
+  background: var(--green);
+  color: var(--ink);
+  font-size: 12px;
+}
+.consultation {
+  background: var(--paper);
+  color: var(--ink);
+}
+.consultation .window {
+  transform: none;
+  background: transparent;
+  border: 0;
+}
+.consultation .windowBar {
+  color: #59614f;
+  border-bottom-color: #bec3b5;
+  padding-inline: 0;
+}
+.consultation .windowContent {
+  padding: 18px 0 0;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border: 1px solid #aab39b;
+  color: #59614f;
+}
+.search > span {
+  font-size: 24px;
+  line-height: 1;
+}
+.result {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid #c8cebf;
+}
+.result:last-child {
+  border-bottom: 0;
+}
+.result > span:last-child {
+  margin-left: auto;
+}
+.file {
+  color: #657355;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+}
+.scheduling {
+  background: var(--green);
+  color: var(--paper);
+}
+.scheduling .window {
+  transform: rotate(2deg);
+  border-color: var(--ink);
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.days > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0;
+  color: #b3be9f;
+  font-size: 9px;
+}
+.days b {
+  font-family: var(--font-display), sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+.days .selected {
+  background: var(--green);
+  color: var(--ink);
+  border-radius: 2px;
+}
+.event {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-left: 2px solid var(--green);
+  background: #343e24;
+  font-size: 11px;
+}
+.event > span:first-child {
+  font-family: var(--font-mono), monospace;
+}
+.event small {
+  display: block;
+  margin-top: 4px;
+  color: #b5c09f;
+  font-size: 10px;
+}
+.free {
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+  color: #b6c3a2;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+}
+.free span {
+  font-family: var(--font-sans), sans-serif;
+}
+.scope {
+  max-width: 640px;
+  margin-top: 32px;
+  color: #aeb3a5;
+  font-size: 12px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .registration:hover .window,
+  .scheduling:hover .window {
+    transform: rotate(0);
+  }
+}
+@media (max-width: 900px) {
+  .example {
+    gap: 6%;
+  }
+  .visual {
+    min-height: 260px;
+    padding: 22px;
+  }
+  .windowContent {
+    padding: 16px;
+    font-size: 11px;
+  }
+  .event {
+    gap: 9px;
+    padding: 10px;
+    font-size: 10px;
+  }
+  .copy p {
+    font-size: 14px;
+  }
+}
+@media (max-width: 680px) {
+  .examples {
+    gap: 36px;
+  }
+  .example {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding-top: 28px;
+  }
+  .copy h3 {
+    font-size: clamp(28px, 7vw, 36px);
+  }
+  .copy p {
+    margin-top: 12px;
+  }
+  .visual {
+    padding: 22px;
+    min-height: 260px;
+  }
+}

@@ -1,0 +1,762 @@
+.hero {
+  grid-template-columns: 1.16fr 1fr;
+  column-gap: 24px;
+  display: grid;
+  padding-block: 72px 84px;
+  align-items: center;
+  min-height: min(740px, calc(100svh - 86px));
+}
+.hero h1 {
+  z-index: 1;
+  font-size: clamp(62px, 7.15vw, 106px);
+  line-height: 1.045;
+  position: relative;
+}
+.hero h1 > span {
+  white-space: nowrap;
+  display: block;
+}
+.hero h1 > span:nth-child(2) {
+  animation-delay: 90ms;
+}
+.hero h1 > span:nth-child(3) {
+  animation-delay: 0.18s;
+}
+.hero-description {
+  color: #c2c5b9;
+  max-width: 400px;
+  margin-top: 28px;
+  font-size: 16px;
+}
+.hero-actions {
+  align-items: center;
+  gap: 28px;
+  margin-top: 31px;
+  display: flex;
+}
+.pilot-note {
+  color: var(--muted);
+  margin-top: 24px;
+  font-size: 11px;
+}
+.note-marker {
+  color: var(--green);
+  margin-right: 5px;
+  font-size: 15px;
+}
+.process-dial {
+  align-self: center;
+  min-width: 0;
+  width: 100%;
+  max-width: 460px;
+  justify-self: end;
+}
+.dial-drawing {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+.dial-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.dial-tick {
+  stroke: #454a3d;
+  stroke-width: 1.5px;
+}
+.dial-tick.major {
+  stroke: #858d77;
+}
+.dial-segment {
+  stroke: var(--green);
+  fill: none;
+  stroke-width: 8px;
+  stroke-linecap: round;
+  opacity: 0.16;
+  transition: opacity 0.4s, stroke-width 0.4s;
+}
+.dial-segment.active {
+  opacity: 1;
+  stroke-width: 10px;
+}
+.dial-center {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: absolute;
+  inset: 22%;
+}
+.dial-value {
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.09em;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  align-items: baseline;
+  gap: 12px;
+  font-size: clamp(100px, 11vw, 156px);
+  font-weight: 400;
+  line-height: 1.05;
+  display: flex;
+}
+.dial-value > span {
+  color: var(--muted);
+  letter-spacing: -0.02em;
+  font-size: 16px;
+}
+.dial-description {
+  color: #c0c5b6;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.dial-controls {
+  border-top: 1px solid var(--line);
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  display: grid;
+}
+.dial-controls button {
+  color: #b3b9a8;
+  background: 0 0;
+  border: 0;
+  border-top: 2px solid #0000;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: -1px;
+  padding: 12px 4px 8px;
+  min-height: 62px;
+  font-size: 11px;
+  transition: color 0.2s, border-color 0.2s;
+  display: flex;
+  position: relative;
+}
+.dial-controls button .mono {
+  color: #89937a;
+  font-size: 9px;
+}
+.dial-controls button:hover,
+.dial-controls button[aria-pressed="true"] {
+  color: var(--green);
+  border-top-color: var(--green);
+}
+.process-dial figcaption {
+  text-align: center;
+  color: #a0a795;
+  margin-top: 10px;
+  font-size: 10px;
+}
+.method {
+  padding-block: 108px;
+}
+.method-layout {
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 10%;
+  display: grid;
+}
+.section-intro {
+  position: sticky;
+  top: 134px;
+}
+.section-intro > p {
+  color: #5c6256;
+  max-width: 350px;
+  margin-top: 28px;
+  font-size: 15px;
+}
+.method-footnote {
+  align-items: center;
+  gap: 13px;
+  margin-top: 38px;
+  display: flex;
+}
+.method-footnote p {
+  color: #5c6256;
+  font-size: 11px;
+}
+.mini-clock {
+  border: 1px solid #7a8270;
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  position: relative;
+}
+.mini-clock:before {
+  content: "";
+  border-bottom: 1px solid #56604b;
+  border-left: 1px solid #56604b;
+  width: 6px;
+  height: 7px;
+  position: absolute;
+  top: 4px;
+  left: 11px;
+}
+.process-list {
+  border-top: 1px solid #bec3b5;
+}
+.process-step {
+  border-bottom: 1px solid #bec3b5;
+}
+.process-step summary {
+  align-items: center;
+  gap: 20px;
+  min-height: 87px;
+  padding: 20px 0;
+  display: flex;
+}
+.step-number {
+  color: #5f6854;
+  width: 23px;
+}
+.step-name {
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.04em;
+  font-size: 26px;
+}
+.step-time {
+  color: #626c55;
+  margin-left: auto;
+  font-size: 10px;
+}
+.step-content {
+  padding: 0 26px 29px 43px;
+}
+.step-content h3 {
+  font-family: var(--font-sans), sans-serif;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.step-content p {
+  color: #59614f;
+  max-width: 360px;
+  font-size: 13px;
+}
+.decision {
+  color: #343d28;
+  background: #e0e7d3;
+  border-radius: 2px;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  padding: 7px 10px;
+  font-size: 10px;
+  display: inline-flex;
+}
+.process-note {
+  color: #5c6256;
+  max-width: 400px;
+  padding-top: 22px;
+  font-size: 11px;
+}
+.ownership {
+  padding-block: 110px;
+}
+.ownership-layout {
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 12%;
+  display: grid;
+}
+.delivery-art {
+  background-color: #e2e6d9;
+  background-image: linear-gradient(#cdd4bf 1px, #0000 1px), linear-gradient(90deg, #cdd4bf 1px, #0000 1px);
+  background-size: 36px 36px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 425px;
+  display: flex;
+  position: relative;
+}
+.delivery-folder {
+  background: var(--ink);
+  width: 72%;
+  color: var(--paper);
+  border: 1px solid #303927;
+  padding: 26px 25px 25px;
+  position: relative;
+  transform: rotate(-5deg);
+  box-shadow: 9px 12px #b5c29e;
+}
+.folder-heading {
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 35px;
+  display: flex;
+}
+.folder-code {
+  color: var(--green);
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.075em;
+  font-size: 46px;
+}
+.folder-row {
+  border-top: 1px solid #3e4930;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 11px;
+  display: flex;
+}
+.folder-row svg {
+  color: var(--green);
+}
+.ownership-copy > p {
+  color: #5b6352;
+  max-width: 355px;
+  margin-top: 23px;
+  font-size: 14px;
+}
+.ownership-copy > p + p {
+  margin-top: 12px;
+}
+.ownership-copy .text-link {
+  margin-top: 20px;
+}
+.dark-link {
+  border-bottom: 1px solid #c2c8b7;
+  padding-bottom: 4px;
+}
+.faq {
+  grid-template-columns: 1fr 1.3fr;
+  gap: 10%;
+  display: grid;
+}
+.faq-intro > p {
+  color: var(--muted);
+  margin-top: 22px;
+  font-size: 14px;
+}
+.faq-list {
+  border-top: 1px solid var(--line);
+}
+.faq-item {
+  border-bottom: 1px solid var(--line);
+}
+.faq-item summary {
+  letter-spacing: -0.025em;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  padding: 24px 0;
+  font-size: 16px;
+  display: flex;
+}
+.faq-item summary .expand-icon {
+  color: var(--green);
+}
+.faq-item p {
+  color: #adb4a2;
+  padding: 0 30px 25px 0;
+  font-size: 13px;
+  line-height: 1.85;
+}
+.invitation {
+  background: var(--green);
+  color: var(--ink);
+  padding: 72px 0 77px;
+}
+.invitation-inner {
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  display: flex;
+}
+.invitation h2 {
+  margin-top: 0;
+}
+.invitation-action {
+  padding-bottom: 5px;
+}
+.invitation-action p {
+  margin-bottom: 23px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.process-step summary .step-name {
+  transition: transform 0.35s var(--ease);
+}
+.process-step summary:hover .step-name {
+  transform: translateX(6px);
+}
+.delivery-folder::before {
+  content: "";
+  position: absolute;
+  width: 36%;
+  height: 25px;
+  background: var(--ink);
+  top: -24px;
+  left: -1px;
+  border-radius: 7px 7px 0 0;
+}
+@media (max-width: 1150px) {
+  .hero {
+    grid-template-columns: 1.12fr 1fr;
+    gap: 12px;
+  }
+  .hero h1 {
+    font-size: 7.05vw;
+  }
+  .hero-description {
+    max-width: 340px;
+    font-size: 14px;
+  }
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .hero-actions .button {
+    gap: 16px;
+    padding-inline: 17px;
+  }
+  .hero-actions .text-link {
+    gap: 9px;
+    font-size: 12px;
+  }
+  .dial-controls button {
+    font-size: 10px;
+  }
+  .dial-value {
+    font-size: 11vw;
+  }
+  .method-layout {
+    gap: 7%;
+  }
+  .ownership-layout {
+    gap: 8%;
+  }
+  .delivery-folder {
+    width: 77%;
+    padding-inline: 19px;
+  }
+}
+@media (max-width: 900px) {
+  .hero {
+    min-height: 660px;
+    padding-block: 64px 72px;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+  }
+  .hero h1 {
+    font-size: 7.1vw;
+  }
+  .hero-description {
+    max-width: 310px;
+    font-size: 13px;
+  }
+  .pilot-note {
+    max-width: 270px;
+    font-size: 10px;
+  }
+  .process-dial {
+    align-self: center;
+    margin-top: 0;
+  }
+  .dial-controls {
+    margin-inline: 0;
+  }
+  .dial-description {
+    font-size: 10px;
+  }
+  .dial-controls button {
+    font-size: 9px;
+    padding-inline: 1px;
+  }
+  .method,
+  .ownership {
+    padding-block: 80px;
+  }
+  .step-name {
+    font-size: 23px;
+  }
+  .process-step summary {
+    gap: 12px;
+  }
+  .step-content {
+    padding-inline: 34px 5px;
+  }
+  .section-intro > p {
+    font-size: 13px;
+  }
+  .method-footnote {
+    gap: 9px;
+  }
+  .method-footnote p {
+    font-size: 10px;
+  }
+  .ownership-layout {
+    gap: 7%;
+  }
+  .delivery-art {
+    min-height: 370px;
+  }
+  .delivery-folder {
+    width: 80%;
+    padding-inline: 15px;
+  }
+  .folder-heading {
+    gap: 7px;
+    padding-bottom: 24px;
+  }
+  .folder-code {
+    font-size: 36px;
+  }
+  .folder-row {
+    font-size: 9px;
+  }
+  .ownership-copy > p {
+    font-size: 12px;
+  }
+  .faq {
+    grid-template-columns: 0.8fr 1.3fr;
+    gap: 8%;
+  }
+  .faq-item summary {
+    font-size: 14px;
+  }
+  .invitation-action p {
+    max-width: 250px;
+  }
+}
+@media (max-width: 680px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-block: 48px 58px;
+    min-height: auto;
+  }
+  .hero h1 {
+    font-size: clamp(50px, 11.8vw, 77px);
+    line-height: 1.035;
+  }
+  .hero-description {
+    max-width: 380px;
+    margin-top: 24px;
+    font-size: 15px;
+  }
+  .hero-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    margin-top: 25px;
+  }
+  .hero-actions .button {
+    gap: 16px;
+    min-height: 50px;
+    padding-inline: 15px;
+    font-size: 11px;
+  }
+  .hero-actions .text-link {
+    gap: 7px;
+    font-size: 11px;
+  }
+  .hero-actions .text-link svg {
+    width: 17px;
+  }
+  .pilot-note {
+    max-width: none;
+    margin-top: 18px;
+    font-size: 10px;
+  }
+  .process-dial {
+    justify-self: center;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 45px;
+  }
+  .dial-drawing {
+    margin-top: 14px;
+  }
+  .dial-value {
+    font-size: clamp(110px, 30vw, 137px);
+  }
+  .dial-description {
+    font-size: 12px;
+  }
+  .dial-controls {
+    margin-inline: 6px;
+  }
+  .dial-controls button {
+    gap: 6px;
+    min-height: 57px;
+    font-size: 10px;
+  }
+  .process-dial figcaption {
+    margin-top: 9px;
+    font-size: 10px;
+  }
+  .method {
+    padding-block: 68px;
+  }
+  .method-layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .section-intro {
+    position: static;
+  }
+  .section-intro > p {
+    max-width: 360px;
+    margin-top: 22px;
+    font-size: 14px;
+  }
+  .method-footnote {
+    gap: 12px;
+    margin-top: 22px;
+  }
+  .method-footnote p {
+    font-size: 11px;
+  }
+  .process-step summary {
+    gap: 18px;
+    min-height: 76px;
+  }
+  .step-name {
+    font-size: 25px;
+  }
+  .step-content {
+    padding: 0 15px 26px 41px;
+  }
+  .step-content p {
+    font-size: 13px;
+  }
+  .process-note {
+    font-size: 11px;
+  }
+  .ownership {
+    padding-block: 68px;
+  }
+  .ownership-layout {
+    grid-template-columns: 1fr;
+    gap: 43px;
+  }
+  .ownership-copy {
+    grid-row: 1;
+  }
+  .ownership-copy > p {
+    max-width: 400px;
+    font-size: 14px;
+  }
+  .delivery-art {
+    min-height: 390px;
+  }
+  .delivery-folder {
+    width: 74%;
+    max-width: 330px;
+    padding-inline: 23px;
+  }
+  .folder-code {
+    font-size: 46px;
+  }
+  .folder-row {
+    font-size: 11px;
+  }
+  .faq {
+    grid-template-columns: 1fr;
+    gap: 33px;
+  }
+  .faq-intro > p {
+    margin-top: 19px;
+    font-size: 14px;
+  }
+  .faq-item summary {
+    padding-block: 24px;
+    font-size: 15px;
+  }
+  .faq-item p {
+    padding-right: 18px;
+    font-size: 13px;
+  }
+  .invitation {
+    padding-block: 55px;
+  }
+  .invitation-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 27px;
+  }
+  .invitation h2 {
+    font-size: 44px;
+  }
+  .invitation-action p {
+    max-width: none;
+    margin-bottom: 19px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 370px) {
+  .hero h1 {
+    font-size: 11.8vw;
+  }
+  .hero-actions {
+    gap: 9px;
+  }
+  .hero-actions .button {
+    gap: 12px;
+    padding-inline: 12px;
+    font-size: 10px;
+  }
+  .hero-actions .text-link {
+    font-size: 10px;
+  }
+  .hero-actions .text-link svg {
+    display: none;
+  }
+  .hero-description {
+    font-size: 14px;
+  }
+  .dial-value {
+    font-size: 100px;
+  }
+  .dial-controls button {
+    font-size: 9px;
+  }
+  .step-name {
+    font-size: 23px;
+  }
+  .step-time {
+    font-size: 9px;
+  }
+  .process-step summary {
+    gap: 13px;
+  }
+  .invitation h2 {
+    font-size: 38px;
+  }
+  .folder-row {
+    font-size: 10px;
+  }
+  .delivery-folder {
+    width: 78%;
+    padding-inline: 17px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1 > span {
+    animation: enter 0.8s var(--ease) both;
+  }
+  .hero-description {
+    animation: enter 0.8s var(--ease) both;
+    animation-delay: 0.2s;
+  }
+  .dial-segment {
+    animation: dial-enter 1.1s var(--ease) backwards;
+  }
+  .dial-value[data-selected] {
+    animation: value-enter 0.5s var(--ease) both;
+  }
+  .process-step[open] .step-content,
+  .faq-item[open] > p {
+    animation: value-enter 0.4s var(--ease);
+  }
+}
