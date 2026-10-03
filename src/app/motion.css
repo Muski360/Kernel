@@ -1,6 +1,76 @@
 /* Refinement: typography and space carry the structure; motion belongs to objects. */
+.kernel-cursor {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  .kernel-cursor {
+    --cursor-fill: var(--paper);
+    --cursor-outline: var(--ink);
+    --cursor-feedback: var(--green);
+    display: block;
+  }
+  .kernel-cursor[data-visible] {
+    opacity: 1;
+    transition: opacity 0.14s;
+  }
+  html.kernel-pointer,
+  html.kernel-pointer * {
+    cursor: none !important;
+  }
+  .kernel-cursor svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--cursor-fill);
+    stroke: var(--cursor-outline);
+    stroke-width: 85;
+    paint-order: stroke fill;
+    overflow: visible;
+    transform-origin: 50% 50%;
+    transition:
+      transform 0.25s var(--ease),
+      fill 0.12s ease-out,
+      stroke 0.12s ease-out;
+  }
+  .kernel-cursor[data-surface="light"] {
+    --cursor-fill: var(--ink);
+    --cursor-outline: transparent;
+    --cursor-feedback: var(--ink);
+  }
+  .kernel-cursor[data-surface="light"] svg {
+    animation: cursor-tone-in 0.22s var(--ease);
+  }
+  .kernel-cursor[data-state="link"] svg {
+    fill: var(--cursor-feedback);
+    transform: rotate(-12deg) scale(1.16);
+  }
+  .kernel-cursor[data-pressed]:not([data-state="text"]) svg {
+    transform: rotate(-6deg) scale(0.9);
+  }
+  .kernel-cursor[data-state="text"] svg {
+    transform: none;
+  }
+  .kernel-cursor[data-selecting] svg {
+    fill: var(--cursor-feedback);
+  }
+}
+@keyframes cursor-tone-in {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .hero {
-  padding-block: 88px 94px;
+  padding-block: 72px 84px;
   align-items: center;
   min-height: min(740px, calc(100svh - 86px));
 }
@@ -83,6 +153,10 @@
   overflow: visible;
   pointer-events: none;
 }
+.kernel-field,
+.kernel-surface {
+  pointer-events: visiblePainted;
+}
 .mark-playback {
   display: none;
   position: absolute;
@@ -90,7 +164,7 @@
   right: 15px;
   align-items: center;
   gap: 9px;
-  background: none;
+  background: var(--paper);
   border: 1px solid #a6af98;
   border-radius: 30px;
   padding: 10px 15px;
@@ -103,20 +177,6 @@
 }
 .kernel-scene[data-motion-ready] .mark-playback {
   display: flex;
-}
-.dial-segment.active {
-  stroke-width: 16;
-}
-.dial-controls button {
-  min-height: 58px;
-  transition:
-    color 0.25s,
-    border-color 0.25s,
-    padding-left 0.35s var(--ease);
-}
-.dial-controls button:hover,
-.dial-controls button[aria-pressed="true"] {
-  padding-left: 9px;
 }
 .process-step summary .step-name {
   transition: transform 0.35s var(--ease);
@@ -220,6 +280,10 @@
 }
 
 @media (max-width: 900px) {
+  .hero {
+    min-height: 660px;
+    padding-block: 64px 72px;
+  }
   .about-hero-grid {
     gap: 25px;
   }
@@ -333,7 +397,7 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .dial-value {
+  .dial-value[data-selected] {
     animation: value-enter 0.5s var(--ease) both;
   }
   .process-step[open] .step-content,

@@ -3,7 +3,9 @@ import Link from "next/link";
 import localFont from "next/font/local";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { SiteMotion } from "@/components/site-motion";
 import { siteUrl } from "@/lib/site";
+import "lenis/dist/lenis.css";
 import "./globals.css";
 import "./motion.css";
 
@@ -69,6 +71,7 @@ export default function RootLayout({
         </noscript>
         {children}
         <Footer />
+        <SiteMotion />
       </body>
     </html>
   );

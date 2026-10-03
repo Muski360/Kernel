@@ -187,6 +187,140 @@ try {
   await page.screenshot({ path: "output/playwright/landing-motion.png" });
   console.log("PASS reduced motion and regular entrance");
 
+  const cursor = page.locator(".kernel-cursor");
+  const html = page.locator("html");
+  assert.match(await html.getAttribute("class"), /\blenis\b/);
+  await page.locator(".hero-actions .button").hover();
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.hasAttribute("data-interactive"));
+  assert.equal(await cursor.getAttribute("data-visible"), "");
+  await page.mouse.down();
+  assert.equal(await cursor.getAttribute("data-pressed"), "");
+  await page.mouse.move(680, 170);
+  await page.mouse.up();
+  await page.locator(".hero-description").hover();
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-state") === "text");
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor path").getBoundingClientRect().width < 8);
+  assert(await html.evaluate(el => el.classList.contains("kernel-pointer")));
+  assert.equal(await page.locator(".hero-description").evaluate(el => getComputedStyle(el).cursor), "none");
+  const copyBox = await page.locator(".hero-description").boundingBox();
+  await page.mouse.move(copyBox.x + 2, copyBox.y + 12);
+  await page.mouse.down();
+  await page.mouse.move(copyBox.x + 280, copyBox.y + 39, { steps: 12 });
+  assert.match(await page.evaluate(() => getSelection().toString()), /Você conta/);
+  assert.equal(await cursor.getAttribute("data-selecting"), "");
+  const beamBox = await page.locator(".kernel-cursor path").boundingBox();
+  assert(Math.abs(beamBox.x + beamBox.width / 2 - copyBox.x - 280) < 0.1);
+  assert(Math.abs(beamBox.y + beamBox.height / 2 - copyBox.y - 39) < 0.1);
+  // Keep the text shape when a selection passes out of its original paragraph.
+  await page.mouse.move(680, 570, { steps: 5 });
+  assert.equal(await cursor.getAttribute("data-state"), "text");
+  await page.mouse.up();
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-state") === "default");
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor path").getBoundingClientRect().width > 18);
+  await page.locator(".hero-description").hover();
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-state") === "text");
+  await page.keyboard.press("Control+c");
+  assert.equal(await cursor.getAttribute("data-visible"), "");
+  await page.evaluate(() => getSelection().removeAllRanges());
+  // Rapid reversals must settle back to the same single SVG without a lost cursor.
+  for (let pass = 0; pass < 3; pass++) {
+    await page.locator(".hero-actions .button").hover();
+    await page.locator(".hero-description").hover();
+  }
+  await page.locator(".dial-svg").hover({ position: { x: 15, y: 15 } });
+  await page.waitForFunction(() => document.documentElement.classList.contains("kernel-pointer"));
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-state") === "default");
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor path").getBoundingClientRect().width > 18);
+  assert.equal(await cursor.locator("path").count(), 1);
+  await page.keyboard.press("Tab");
+  assert.equal(await cursor.getAttribute("data-visible"), null);
+
+  await page.keyboard.press("Home");
+  await page.waitForFunction(() => scrollY === 0);
+  const heroBottom = await page.locator(".hero").evaluate(el => el.getBoundingClientRect().bottom);
+  await page.mouse.move(1260, Math.min(heroBottom - 16, 880));
+  await page.mouse.wheel(0, 600);
+  await page.waitForFunction(() => scrollY > 10 && scrollY < 590);
+  await page.waitForFunction(() => scrollY >= 599);
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-surface") === "light");
+  await page.keyboard.press("Home");
+  await page.waitForFunction(() => scrollY === 0);
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-surface") === "dark");
+  await page.locator(".hero-actions .button").click();
+  await page.waitForFunction(() => document.activeElement?.id === "como-funciona");
+  assert.equal(new URL(page.url()).hash, "#como-funciona");
+  assert(Math.abs(await page.locator("#como-funciona").evaluate(el => el.getBoundingClientRect().top) - 100) < 2);
+  await page.locator(".section-intro > p").hover();
+  await page.waitForFunction(() => getComputedStyle(document.querySelector(".kernel-cursor svg")).fill === "rgb(17, 19, 16)");
+  assert.equal(await cursor.getAttribute("data-surface"), "light");
+  assert(await cursor.isVisible());
+  await page.locator("#como-funciona").focus();
+  await page.keyboard.press("Tab");
+  assert(await page.locator(".process-step summary").first().evaluate(el => document.activeElement === el));
+  await page.goBack();
+  await page.waitForFunction(() => scrollY === 0);
+
+  const cursorNode = await cursor.elementHandle();
+  for (let pass = 0; pass < 2; pass++) {
+    await page.locator(".hero-actions .text-link").click();
+    await page.waitForURL(`${base}/sobre`);
+    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"));
+    assert.equal(await cursor.count(), 1);
+    assert(await cursorNode.evaluate(el => el === document.querySelector(".kernel-cursor")),
+      "The same cursor survives client-side navigation");
+    await page.locator(".about-hero-copy:not(.kernel-ink-copy) > p").hover();
+    await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-surface") === "light");
+    await page.keyboard.press("Home");
+    await page.waitForFunction(() => scrollY === 0);
+    await page.mouse.move(680, 650);
+    await page.mouse.wheel(0, 400);
+    await page.waitForFunction(() => scrollY > 10 && scrollY < 390);
+    await page.waitForFunction(() => scrollY >= 399);
+    await page.locator(".nav-cta").click();
+    await page.waitForFunction(() => document.activeElement?.id === "piloto");
+    assert.equal(new URL(page.url()).hash, "#piloto");
+    assert(Math.abs(await page.locator("#piloto").evaluate(el => el.getBoundingClientRect().top) - 100) < 2);
+    await page.goBack();
+    // Next returns this unanchored entry to the top with native scrolling too.
+    await page.waitForFunction(() => scrollY === 0);
+    await page.getByRole("banner").getByRole("link", { name: "KERNEL, início" }).click();
+    await page.waitForURL(`${base}/`);
+    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"));
+    assert.equal(await cursor.count(), 1);
+    assert(await cursorNode.evaluate(el => el === document.querySelector(".kernel-cursor")));
+  }
+  for (const route of ["/", "/sobre"]) {
+    await page.goto(`${base}${route}`);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.waitForFunction(() => !document.documentElement.classList.contains("lenis"));
+    assert.equal(await cursor.isVisible(), false);
+    await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "active" });
+    assert.equal(await cursor.isVisible(), false);
+    assert(!/\blenis\b/.test(await html.getAttribute("class")));
+    await page.emulateMedia({ forcedColors: "none" });
+    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"));
+  }
+
+  const touchContext = await browser.newContext({
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+  });
+  const touchPage = await touchContext.newPage();
+  const touchSession = await touchContext.newCDPSession(touchPage);
+  for (const route of ["/", "/sobre"]) {
+    await touchPage.goto(`${base}${route}`);
+    assert.equal(await touchPage.locator(".kernel-cursor").isVisible(), false);
+    await touchSession.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 190, y: 680 }] });
+    for (let step = 1; step <= 8; step++) {
+      await touchSession.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 190, y: 680 - step * 40 }] });
+      await delay(20);
+    }
+    await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await touchPage.waitForFunction(() => scrollY > 150);
+    assert(!await touchPage.locator("html").evaluate(el => el.classList.contains("lenis-smooth")));
+  }
+  await touchContext.close();
+  console.log("PASS global cursor, native text selection/copy, Lenis wheel/anchors/history on Home and Sobre, keyboard, touch, preferences and repeated route changes");
+
   const originalSvg = await readFile("assets/isotipo_vetorizado.svg", "utf8");
   const originalPath = originalSvg.match(/\bd="([^"]+)"/)[1];
   const normalizePath = (path) => path.trim().replace(/\s+/g, " ");
@@ -292,9 +426,23 @@ try {
   const docking = await page.evaluate(() => new Promise((resolve) => {
     const outline = document.querySelector(".kernel-outline");
     const drop = document.querySelector(".kernel-drop");
+    const attraction = document.querySelector(".kernel-attraction");
+    const streaks = [...document.querySelectorAll(".kernel-pull-streak")];
+    const copy = document.querySelector(".about-hero-copy").getBoundingClientRect();
     const rotations = new Set();
+    let pullFrames = 0;
+    let inwardFrames = 0;
+    let lastHead;
+    let lastOpacity = 0;
+    let pullOverlapsCopy = false;
+    let socketInsideMark = true;
+    let socketOrigin;
+    let socketDrift = 0;
     let previous = { rx: 0, ry: 0 };
     let minimumRadius = Infinity;
+    let maximumAreaError = 0;
+    let approachFrames = 0;
+    let maximumSideOffset = 0;
     let maxMaskError = 0;
     const deadline = performance.now() + 14000;
     function sample() {
@@ -302,7 +450,34 @@ try {
       const ry = Number(drop.getAttribute("ry"));
       if (rx > 0) {
         minimumRadius = Math.min(minimumRadius, rx, ry);
-        rotations.add(outline.getAttribute("transform"));
+        maximumAreaError = Math.max(maximumAreaError, Math.abs(rx * ry / (280 * 294) - 1));
+        const transform = outline.getScreenCTM();
+        const toOutlineBall = transform.inverse().multiply(drop.getScreenCTM());
+        const center = new DOMPoint(0, 0).matrixTransform(toOutlineBall);
+        const distance = Math.hypot(center.x - 515, center.y - 1295);
+        if (pullFrames > 0 && distance > 10 && distance < 600) {
+          approachFrames++;
+          maximumSideOffset = Math.max(maximumSideOffset,
+            Math.abs((center.x - 515) * 105 + (center.y - 1295) * 265) / Math.hypot(265, 105));
+        }
+        rotations.add([transform.a, transform.b, transform.c, transform.d, transform.e, transform.f].join(","));
+        if (Number(attraction.getAttribute("opacity")) > .01) {
+          pullFrames++;
+          const streak = streaks[0];
+          const head = streak.transform.baseVal.consolidate().matrix.e;
+          const opacity = Number(streak.getAttribute("opacity"));
+          if (lastHead > head && opacity > .02 && lastOpacity > .02) inwardFrames++;
+          lastHead = head;
+          lastOpacity = opacity;
+          const bounds = attraction.getBoundingClientRect();
+          pullOverlapsCopy ||= bounds.left < copy.right && bounds.right > copy.left &&
+            bounds.top < copy.bottom && bounds.bottom > copy.top;
+          const toOutline = transform.inverse().multiply(attraction.getScreenCTM());
+          const socket = new DOMPoint(0, 0).matrixTransform(toOutline);
+          socketInsideMark &&= outline.isPointInFill(socket);
+          socketOrigin ??= socket;
+          socketDrift = Math.max(socketDrift, Math.hypot(socket.x - socketOrigin.x, socket.y - socketOrigin.y));
+        }
         const ink = document.querySelector(".kernel-ink-copy");
         const box = ink.getBoundingClientRect();
         const mask = ink.style.clipPath.match(/-?\d+(?:\.\d+)?/g).map(Number);
@@ -319,7 +494,10 @@ try {
             previous.rx * Math.cos(angle), previous.ry * Math.sin(angle),
           ).matrixTransform(toOutline));
         }).every(Boolean);
-        resolve({ minimumRadius, contained, rotations: rotations.size, maxMaskError });
+        resolve({ minimumRadius, maximumAreaError, approachFrames, maximumSideOffset,
+          contained, rotations: rotations.size, maxMaskError,
+          pullFrames, inwardFrames, pullOverlapsCopy, socketInsideMark, socketDrift,
+          pullCleared: Number(attraction.getAttribute("opacity")) < .001 });
         return;
       }
       if (performance.now() > deadline) resolve({ timedOut: true });
@@ -329,17 +507,61 @@ try {
   }));
   assert.equal(docking.timedOut, undefined);
   assert(docking.minimumRadius >= 250, "The same full-size ball survives the whole trip");
+  assert(docking.maximumAreaError < .005, "Squash and stretch preserve the ball's area");
+  assert(docking.approachFrames > 5 && docking.maximumSideOffset < .03,
+    "The final approach follows the socket axis, including the core's reaction");
   assert.equal(docking.contained, true, "The ball disappears only after complete reintegration");
   assert(docking.rotations > 10, "The base reacts throughout the journey");
   assert(docking.maxMaskError < .03, "The mask remains synchronized on every sampled frame");
+  assert(docking.pullFrames > 10 && docking.inwardFrames > 10, "The streaks move continuously into the isotipo");
+  assert.equal(docking.socketInsideMark, true, "The attraction originates inside the remaining isotipo");
+  assert(docking.socketDrift < .03, "The magnetic source stays attached to the isotipo during recoil");
+  assert.equal(docking.pullOverlapsCopy, false, "The attraction stays clear of the typography");
+  assert.equal(docking.pullCleared, true, "The pull is absorbed before the loop restarts");
   assert.equal(normalizePath(await outline.getAttribute("d")), normalizePath(originalPath));
 
   await page.waitForFunction(() => Number(document.querySelector(".kernel-drop").getAttribute("rx")) > 200);
+  assert(await page.evaluate(() => {
+    const shape = document.querySelector(".kernel-outline");
+    const ball = document.querySelector(".kernel-drop");
+    const matrix = shape.getScreenCTM().inverse().multiply(ball.getScreenCTM());
+    return Array.from({ length: 96 }, (_, i) => {
+      const angle = i / 96 * Math.PI * 2;
+      return shape.isPointInFill(new DOMPoint(
+        Number(ball.getAttribute("rx")) * Math.cos(angle),
+        Number(ball.getAttribute("ry")) * Math.sin(angle),
+      ).matrixTransform(matrix));
+    }).every(Boolean);
+  }), "The ball first becomes visible entirely inside the original mass");
+  const release = await page.evaluate(() => new Promise((resolve) => {
+    const shape = document.querySelector(".kernel-outline");
+    const ball = document.querySelector(".kernel-drop");
+    const neck = document.querySelector(".kernel-neck");
+    let ligamentFrames = 0, sourceVacated = true;
+    const deadline = performance.now() + 5000;
+    function sample() {
+      const center = new DOMPoint(0, 0).matrixTransform(
+        shape.getScreenCTM().inverse().multiply(ball.getScreenCTM()));
+      const distance = Math.hypot(center.x - 515, center.y - 1295);
+      if (distance > 130 && distance < 400 && neck.getAttribute("d")) ligamentFrames++;
+      if (distance > 340) sourceVacated &&= !shape.isPointInFill(new DOMPoint(515, 1295));
+      if (distance > 620) return resolve({ ligamentFrames, sourceVacated });
+      if (performance.now() > deadline) return resolve({ timedOut: true });
+      requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  }));
+  assert.equal(release.timedOut, undefined);
+  assert(release.ligamentFrames > 5, "The shared ligament stretches before separating");
+  assert.equal(release.sourceVacated, true, "No stationary copy remains after the ball leaves");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await playback.waitFor({ state: "hidden" });
   assert.equal(await ink.count(), 0);
   assert.equal(normalizePath(await outline.getAttribute("d")), normalizePath(originalPath));
   assert.equal(Number(await drop.getAttribute("rx")), 0);
+  assert.equal(await page.locator(".kernel-neck").getAttribute("d"), "");
+  assert.equal(Number(await page.locator(".kernel-attraction").getAttribute("opacity")), 0,
+    "Reduced motion clears the magnetic pull");
   await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "active" });
   assert.equal(await ink.count(), 0, "Forced colors retain ordinary readable text");
   await page.emulateMedia({ forcedColors: "none" });
@@ -408,10 +630,13 @@ try {
   await noFonts.close();
   console.log("PASS font-failure fallback");
 
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const width of [320, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const missing = await page.goto(`${base}/pagina-inexistente`);
     assert.equal(missing.status(), 404);
+    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"));
+    assert.equal(await cursor.count(), 1);
     assert.equal(await page.locator("h1").count(), 1);
     assert(
       await page.evaluate(
@@ -429,6 +654,18 @@ try {
       });
     }
   }
+  await page.getByRole("link", { name: "Voltar ao início" }).hover();
+  await page.waitForFunction(() => document.querySelector(".kernel-cursor")?.getAttribute("data-state") === "link");
+  assert.equal(await cursor.getAttribute("data-visible"), "");
+  await page.mouse.move(1200, 600);
+  await page.mouse.wheel(0, 150);
+  await page.waitForFunction(() => scrollY > 10 && scrollY < 140);
+  await page.waitForFunction(() => scrollY >= 149);
+  await page.keyboard.press("Home");
+  await page.waitForFunction(() => scrollY === 0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForFunction(() => !document.documentElement.classList.contains("lenis"));
+  assert.equal(await cursor.isVisible(), false);
   await page
     .locator(".error-actions")
     .getByRole("link", { name: "Sobre o KERNEL" })
@@ -448,7 +685,7 @@ try {
     "Reference prototype remains untouched",
   );
   console.log(
-    "PASS responsive 404, axe, both recovery links, social image and untouched prototype",
+    "PASS responsive 404, global cursor and Lenis, reduced motion, axe, recovery links, social image and untouched prototype",
   );
   console.log("All production browser checks passed.");
 } finally {

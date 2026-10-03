@@ -3,7 +3,6 @@ import { Arrow, Check } from "@/components/icons";
 import { ProcessDial } from "@/components/process-dial";
 import { steps } from "@/components/process";
 import { ProjectInvitation } from "@/components/project-invitation";
-import { LandingMotion } from "@/components/landing-motion";
 
 const questions = [
   [
@@ -319,7 +318,6 @@ export default function Home() {
         </div>
       </section>
       <ProjectInvitation />
-      <LandingMotion />
     </main>
   );
 }

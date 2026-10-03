@@ -13,6 +13,31 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 100px;
+  scrollbar-color: #737c63 var(--ink);
+  scrollbar-width: thin;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--ink);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #737c63;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+  }
+}
+@media (forced-colors: active) {
+  html {
+    scrollbar-color: auto;
+    scrollbar-width: auto;
+  }
 }
 body {
   background: var(--ink);
@@ -313,12 +338,14 @@ summary::-webkit-details-marker {
 .process-dial {
   align-self: center;
   min-width: 0;
-  margin-top: -6px;
+  width: 100%;
+  max-width: 460px;
+  justify-self: end;
 }
 .dial-drawing {
   width: 100%;
-  max-width: 500px;
-  margin: 8px auto 4px;
+  max-width: 440px;
+  margin: 0 auto 20px;
   position: relative;
 }
 .dial-svg {
@@ -326,43 +353,26 @@ summary::-webkit-details-marker {
   height: auto;
   overflow: visible;
 }
-.dial-hairline {
-  fill: none;
-  stroke: #363b2e;
-  stroke-width: 1px;
-}
-.dial-dashed {
-  stroke-dasharray: 2 5;
-  stroke: #30372a;
-}
 .dial-tick {
-  stroke: #515747;
-  stroke-width: 1px;
+  stroke: #454a3d;
+  stroke-width: 1.5px;
 }
 .dial-tick.major {
-  stroke: #919b7c;
+  stroke: #858d77;
 }
 .dial-segment {
   stroke: var(--green);
   fill: none;
-  stroke-width: 13px;
-  opacity: 0.12;
+  stroke-width: 8px;
+  stroke-linecap: round;
+  opacity: 0.16;
   transition:
     opacity 0.4s,
     stroke-width 0.4s;
 }
 .dial-segment.active {
   opacity: 1;
-}
-.dial-cross {
-  fill: none;
-  stroke: #6a7556;
-  stroke-width: 1px;
-}
-.dial-svg text {
-  font-family: var(--font-mono), monospace;
-  fill: #a8b099;
-  font-size: 10px;
+  stroke-width: 10px;
 }
 .dial-center {
   flex-direction: column;
@@ -370,33 +380,34 @@ summary::-webkit-details-marker {
   align-items: center;
   display: flex;
   position: absolute;
-  inset: 29% 16% 27%;
+  inset: 22%;
 }
 .dial-value {
   font-family: var(--font-display), sans-serif;
   letter-spacing: -0.09em;
-  color: var(--green);
+  color: var(--paper);
   font-variant-numeric: tabular-nums;
   align-items: baseline;
-  gap: 6px;
-  font-size: clamp(85px, 10.5vw, 156px);
+  gap: 12px;
+  font-size: clamp(100px, 11vw, 156px);
   font-weight: 400;
   line-height: 1.05;
   display: flex;
 }
 .dial-value > span {
+  color: var(--muted);
   letter-spacing: -0.02em;
   font-size: 16px;
 }
 .dial-description {
   color: #c0c5b6;
-  margin-top: 4px;
+  margin-top: 12px;
   font-size: 12px;
 }
 .dial-controls {
   border-top: 1px solid var(--line);
   grid-template-columns: repeat(5, 1fr);
-  margin: 8px 12px 0;
+  margin: 0;
   display: grid;
 }
 .dial-controls button {
@@ -409,7 +420,8 @@ summary::-webkit-details-marker {
   gap: 6px;
   margin-top: -1px;
   padding: 12px 4px 8px;
-  font-size: 10px;
+  min-height: 62px;
+  font-size: 11px;
   transition:
     color 0.2s,
     border-color 0.2s;
@@ -1192,17 +1204,54 @@ details[open] > summary .expand-icon:after {
 .team-list {
   border-top: 1px solid #bdc7b0;
 }
-.team-list > div {
+.team-link {
   border-bottom: 1px solid #bdc7b0;
+  justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   padding: 23px 0;
   display: flex;
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease);
 }
-.team-list > div > span {
+.team-name {
   font-family: var(--font-display), sans-serif;
   letter-spacing: -0.04em;
   font-size: 26px;
+  transition: transform 320ms var(--ease);
+}
+.team-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: #5c6850;
+  font-size: 12px;
+  transition: color 240ms var(--ease);
+}
+.team-github svg {
+  transition: transform 320ms var(--ease);
+}
+.team-link:focus-visible {
+  outline-color: var(--ink);
+  outline-offset: 4px;
+}
+.team-link:focus-visible .team-github {
+  color: var(--ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .team-link:hover {
+    background-color: #e7eadf;
+    border-color: #7c866f;
+  }
+  .team-link:hover .team-name {
+    transform: translateX(4px);
+  }
+  .team-link:hover .team-github {
+    color: var(--ink);
+  }
+  .team-link:hover svg {
+    transform: translate(3px, -3px);
+  }
 }
 .about-closing {
   justify-content: space-between;
@@ -1262,7 +1311,7 @@ details[open] > summary .expand-icon:after {
     font-size: 12px;
   }
   .dial-controls button {
-    font-size: 8px;
+    font-size: 10px;
   }
   .dial-value {
     font-size: 11vw;
@@ -1346,14 +1395,18 @@ details[open] > summary .expand-icon:after {
     font-size: 10px;
   }
   .process-dial {
-    align-self: start;
-    margin-top: 54px;
+    align-self: center;
+    margin-top: 0;
   }
   .dial-controls {
     margin-inline: 0;
   }
   .dial-description {
     font-size: 10px;
+  }
+  .dial-controls button {
+    font-size: 9px;
+    padding-inline: 1px;
   }
   .method,
   .ownership,
@@ -1659,7 +1712,7 @@ details[open] > summary .expand-icon:after {
   .dial-controls button {
     gap: 6px;
     min-height: 57px;
-    font-size: 9px;
+    font-size: 10px;
   }
   .process-dial figcaption {
     margin-top: 9px;
@@ -1995,10 +2048,10 @@ details[open] > summary .expand-icon:after {
     margin-top: 21px;
     font-size: 12px;
   }
-  .team-list > div {
+  .team-link {
     padding-block: 22px;
   }
-  .team-list > div > span {
+  .team-name {
     font-size: 25px;
   }
   .about-closing {
@@ -2040,7 +2093,7 @@ details[open] > summary .expand-icon:after {
     font-size: 100px;
   }
   .dial-controls button {
-    font-size: 8px;
+    font-size: 9px;
   }
   .step-name {
     font-size: 23px;
@@ -2077,7 +2130,7 @@ details[open] > summary .expand-icon:after {
 }
 @keyframes dial-enter {
   0% {
-    stroke-dashoffset: 9px;
+    stroke-dashoffset: 1.8;
     opacity: 0.2;
   }
   to {
@@ -2095,7 +2148,7 @@ details[open] > summary .expand-icon:after {
     animation-delay: 0.2s;
   }
   .dial-segment {
-    animation: dial-enter 1.4s var(--ease) backwards;
+    animation: dial-enter 1.1s var(--ease) backwards;
   }
 }
 @media (prefers-reduced-motion: reduce) {

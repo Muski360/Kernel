@@ -188,15 +188,25 @@ export default function About() {
           </div>
           <div className="team-list">
             {[
-              "Rian Eduardo",
-              "Lorenzo Malosso",
-              "Kaio Martinez",
-              "Murilo Dovigo",
-              "Pedro Lanaro",
-            ].map((name) => (
-              <div key={name}>
-                <span>{name}</span>
-              </div>
+              { name: "Rian Eduardo", github: "rianeduardo" },
+              { name: "Lorenzo Malosso", github: "LorenzoPradalMalosso" },
+              { name: "Kaio Martinez", github: "kaiomartinezjorge" },
+              { name: "Murilo Dovigo", github: "Muski360" },
+              { name: "Pedro Lanaro", github: "lanaro0108" },
+            ].map(({ name, github }) => (
+              <a
+                key={github}
+                className="team-link"
+                href={`https://github.com/${github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${name} — GitHub (abre em nova aba)`}
+              >
+                <span className="team-name">{name}</span>
+                <span className="team-github" aria-hidden="true">
+                  GitHub <Arrow diagonal />
+                </span>
+              </a>
             ))}
           </div>
         </div>
